@@ -1,6 +1,6 @@
 {
   "$schema": "https://mintlify.com/docs.json",
-  "theme": "amber",
+  "theme": "maple",
   "name": "402.cat",
   "colors": {
     "primary": "#F59E0B",
@@ -60,60 +60,15 @@
             ]
           },
           {
-            "group": "Token Operations",
-            "pages": [
-              "api-reference/tokens/create",
-              "api-reference/tokens/buy",
-              "api-reference/tokens/sell",
-              "api-reference/tokens/info",
-              "api-reference/tokens/list"
-            ]
-          },
-          {
-            "group": "Trading",
-            "pages": [
-              "api-reference/trading/universal-buy",
-              "api-reference/trading/universal-sell",
-              "api-reference/trading/swap",
-              "api-reference/trading/shielded-swap",
-              "api-reference/trading/positions"
-            ]
-          },
-          {
-            "group": "Chat System",
-            "pages": [
-              "api-reference/chat/join",
-              "api-reference/chat/send-message",
-              "api-reference/chat/renew-lease"
-            ]
-          },
-          {
-            "group": "Fee Management",
-            "pages": [
-              "api-reference/fees/view",
-              "api-reference/fees/claim"
-            ]
-          },
-          {
-            "group": "Real-time",
-            "pages": [
-              "api-reference/realtime/sse",
-              "api-reference/realtime/websocket"
-            ]
-          },
-          {
             "group": "Examples",
             "pages": [
-              "api-reference/examples/workflows",
-              "api-reference/examples/referrals",
-              "api-reference/examples/chat-bots"
+              "api-reference/examples/workflows"
             ]
           },
           {
             "group": "Schemas",
             "pages": [
-              "api-reference/schemas/common",
-              "api-reference/schemas/token"
+              "api-reference/schemas/common"
             ]
           }
         ]
