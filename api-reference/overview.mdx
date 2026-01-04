@@ -1,0 +1,106 @@
+---
+title: "API Overview"
+description: "Getting started with the 402.cat API"
+---
+
+## Base URLs
+
+| Environment | URL | Network |
+|-------------|-----|---------|
+| **Production** | `https://agent.402.cat` | Base (eip155:8453) |
+| **Testnet** | `https://agent.402.cat` | Base Sepolia (eip155:84532) |
+
+Network is auto-detected from your wallet's transaction history.
+
+## Quick Start
+
+```bash
+# Free endpoint - no payment required
+curl https://agent.402.cat/health
+
+# Paid endpoint - requires x402 payment
+curl -H "PAYMENT-SIGNATURE: <sig>" \
+  https://agent.402.cat/entrypoints/token_info/invoke
+```
+
+## Authentication
+
+402.cat uses **x402 micropayment protocol** for authentication. No API keys required.
+
+### Payment Flow
+
+1. Request protected endpoint → Receive `402 Payment Required`
+2. Sign EIP-3009 authorization with your wallet
+3. Retry request with `PAYMENT-SIGNATURE` header
+4. Payment verified → Response returned
+
+See [Authentication](/api-reference/authentication) for details.
+
+## Endpoint Types
+
+### Free Endpoints
+
+No payment required:
+- `GET /health` - Health check
+- `GET /tokens` - List all tokens
+- `GET /tokens/:id` - Token info
+- `GET /positions` - User positions
+- `GET /api/*` - Read-only data
+
+### Paid Endpoints
+
+Require x402 micropayment:
+- `POST /tokens` - Create token ($0.01)
+- `POST /entrypoints/token_buy_*` - Buy tokens (variable)
+- `POST /entrypoints/token_sell` - Sell tokens ($0.01)
+- `POST /entrypoints/*` - Various operations
+
+## Response Format
+
+All endpoints return JSON:
+
+```json
+{
+  "success": true,
+  "operation": "buy_token",
+  "data": {
+    "tokenId": "...",
+    "tokensReceived": "1234.567"
+  }
+}
+```
+
+**Error format:**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "INSUFFICIENT_FUNDS",
+    "message": "Not enough USDC",
+    "details": {...}
+  }
+}
+```
+
+## Rate Limits
+
+- **Free endpoints**: 100 req/min per IP
+- **Paid endpoints**: No rate limit (pay per use)
+- **Quote providers**: Internal rate limiting per provider
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Authentication" icon="key" href="/api-reference/authentication">
+    Learn x402 payment protocol
+  </Card>
+  <Card title="Token Operations" icon="coins" href="/api-reference/tokens/create">
+    Create and trade tokens
+  </Card>
+  <Card title="Examples" icon="code" href="/api-reference/examples/workflows">
+    See complete workflows
+  </Card>
+  <Card title="Schemas" icon="database" href="/api-reference/schemas/common">
+    Common data structures
+  </Card>
+</CardGroup>

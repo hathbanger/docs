@@ -1,0 +1,231 @@
+---
+title: "Installation"
+description: "Install httpcat-cli via npm, Homebrew, or npx"
+---
+
+## Installation Methods
+
+httpcat-cli can be installed in multiple ways depending on your preference and workflow.
+
+### npm (Recommended)
+
+Install globally via npm for the best experience:
+
+```bash
+npm install -g httpcat-cli
+```
+
+After installation, the `httpcat` command will be available system-wide.
+
+**Verify installation:**
+
+```bash
+httpcat --version
+```
+
+### npx (No Install Required)
+
+Use npx to run httpcat without installing:
+
+```bash
+npx httpcat-cli@latest
+```
+
+This always uses the latest version but takes slightly longer to start since it downloads the package each time.
+
+**Useful for:**
+- Quick one-off commands
+- CI/CD pipelines
+- Trying before installing
+- Always using the latest version
+
+### Homebrew (macOS/Linux)
+
+Install via Homebrew tap:
+
+```bash
+brew tap hathbanger/httpcat
+brew install httpcat
+```
+
+**Update to latest:**
+
+```bash
+brew upgrade httpcat
+```
+
+## System Requirements
+
+- **Node.js**: 18.0.0 or higher
+- **Operating Systems**: macOS, Linux, Windows (via WSL recommended)
+- **Network**: Base Sepolia or Base mainnet access
+
+## Configuration
+
+After installation, run the setup wizard:
+
+```bash
+httpcat config
+```
+
+This will guide you through:
+1. **Wallet Setup**: Import or generate a private key
+2. **Network Selection**: Base Sepolia (testnet) or Base (mainnet)
+3. **Preferences**: ASCII art, color output, etc.
+
+Configuration is stored at: `~/.config/httpcat/config.json`
+
+<Warning>
+Never commit your `config.json` file to version control. It contains your encrypted private key.
+</Warning>
+
+## Verification
+
+Test your installation:
+
+```bash
+# Check if the agent is reachable
+httpcat health
+
+# Check your wallet balance
+httpcat balance
+
+# View help
+httpcat --help
+```
+
+## Upgrading
+
+<Tabs>
+  <Tab title="npm">
+    ```bash
+    npm update -g httpcat-cli
+    ```
+  </Tab>
+  <Tab title="Homebrew">
+    ```bash
+    brew upgrade httpcat
+    ```
+  </Tab>
+  <Tab title="npx">
+    npx automatically uses the latest version, no upgrade needed.
+  </Tab>
+</Tabs>
+
+## Uninstallation
+
+<Tabs>
+  <Tab title="npm">
+    ```bash
+    npm uninstall -g httpcat-cli
+    ```
+  </Tab>
+  <Tab title="Homebrew">
+    ```bash
+    brew uninstall httpcat
+    brew untap hathbanger/httpcat
+    ```
+  </Tab>
+</Tabs>
+
+To remove configuration:
+
+```bash
+rm -rf ~/.config/httpcat
+```
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Command not found after npm install" icon="circle-exclamation">
+    Make sure npm's global bin directory is in your PATH:
+
+    ```bash
+    npm config get prefix
+    ```
+
+    Add `$(npm config get prefix)/bin` to your PATH in `~/.bashrc` or `~/.zshrc`:
+
+    ```bash
+    export PATH="$(npm config get prefix)/bin:$PATH"
+    ```
+  </Accordion>
+
+  <Accordion title="Permission errors on npm install" icon="lock">
+    Use one of these solutions:
+
+    **Option 1**: Use npx instead (no permission issues)
+
+    **Option 2**: Fix npm permissions:
+    ```bash
+    mkdir -p ~/.npm-global
+    npm config set prefix '~/.npm-global'
+    echo 'export PATH=~/.npm-global/bin:$PATH' >> ~/.bashrc
+    source ~/.bashrc
+    ```
+
+    Then retry the installation.
+  </Accordion>
+
+  <Accordion title="Network connection errors" icon="wifi">
+    If you see connection errors:
+
+    1. Check your internet connection
+    2. Verify you can reach the agent:
+       ```bash
+       curl https://agent.402.cat/health
+       ```
+    3. Check if you're behind a proxy/firewall
+    4. Try setting a custom agent URL:
+       ```bash
+       export HTTPCAT_AGENT_URL=https://agent.402.cat
+       ```
+  </Accordion>
+
+  <Accordion title="Node.js version issues" icon="node">
+    httpcat-cli requires Node.js 18 or higher.
+
+    Check your version:
+    ```bash
+    node --version
+    ```
+
+    Upgrade Node.js:
+    - **nvm**: `nvm install 18 && nvm use 18`
+    - **Homebrew**: `brew upgrade node`
+    - **Download**: [nodejs.org](https://nodejs.org/)
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card
+    title="Commands Reference"
+    icon="terminal"
+    href="/cli/commands"
+  >
+    Learn all available commands
+  </Card>
+  <Card
+    title="Configuration"
+    icon="gear"
+    href="/cli/configuration"
+  >
+    Advanced configuration options
+  </Card>
+  <Card
+    title="Quick Start"
+    icon="bolt"
+    href="/quickstart"
+  >
+    Get trading in 5 minutes
+  </Card>
+  <Card
+    title="MCP Server"
+    icon="robot"
+    href="/mcp/overview"
+  >
+    Use with AI assistants
+  </Card>
+</CardGroup>

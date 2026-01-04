@@ -1,0 +1,394 @@
+---
+title: "x402 Protocol"
+description: "Understanding the micropayment protocol powering 402.cat"
+---
+
+## What is x402?
+
+**x402** is a micropayment protocol built on top of HTTP 402 (Payment Required). It enables instant, trustless micropayments for API access without complex blockchain interactions or gas fees for every request.
+
+Think of it as "pay-per-use" for APIs, perfect for AI agents and automated trading.
+
+## How It Works
+
+<Steps>
+  <Step title="Request">
+    Client makes an API request to a protected endpoint.
+  </Step>
+
+  <Step title="402 Response">
+    Server responds with `HTTP 402 Payment Required` and payment details:
+    - Cost in USDC
+    - Facilitator information
+    - Nonce for signature
+  </Step>
+
+  <Step title="Authorization">
+    Client creates an EIP-3009 authorization signature:
+    - No gas fees
+    - Offline signing
+    - Single nonce per payment
+  </Step>
+
+  <Step title="Retry with Payment">
+    Client retries request with payment signature in headers.
+  </Step>
+
+  <Step title="Verification">
+    Facilitator verifies the signature and forwards request to server.
+  </Step>
+
+  <Step title="Settlement">
+    After 300ms delay (anti-race condition), facilitator settles payment on-chain.
+  </Step>
+</Steps>
+
+## Key Features
+
+<CardGroup cols={2}>
+  <Card title="Instant" icon="bolt">
+    Payments verified in milliseconds, no waiting for block confirmations
+  </Card>
+  <Card title="Trustless" icon="shield-check">
+    EIP-3009 signatures are cryptographically secure
+  </Card>
+  <Card title="Gasless" icon="money-bill-slash">
+    Client doesn't pay gas - facilitator handles settlement
+  </Card>
+  <Card title="Micropayments" icon="coins">
+    Payments as low as $0.0001 are economically viable
+  </Card>
+</CardGroup>
+
+## EIP-3009: Transfer With Authorization
+
+x402 uses **EIP-3009** for gasless USDC transfers:
+
+### Standard Transfer (Traditional)
+```
+User → Wallet → Gas Fee → Blockchain → Transfer
+```
+
+### EIP-3009 (x402)
+```
+User → Sign Message → Facilitator → Blockchain (facilitator pays gas)
+```
+
+### Authorization Structure
+
+```typescript
+{
+  from: "0x...",           // Your wallet
+  to: "0x...",             // Facilitator/platform
+  value: "100000",         // Amount in USDC (6 decimals)
+  validAfter: 0,           // Valid from timestamp
+  validBefore: 2^256-1,    // Valid until timestamp
+  nonce: "0x...",          // Unique nonce (prevents replay)
+}
+```
+
+Signed with EIP-712 structured data signature.
+
+## x402 V2 (Current)
+
+### Network Format: CAIP-2
+
+Version 2 uses **CAIP-2** network identifiers:
+
+- `eip155:84532` - Base Sepolia (testnet)
+- `eip155:8453` - Base (mainnet)
+
+Instead of simple chain IDs.
+
+### Payment Header
+
+```http
+PAYMENT-SIGNATURE: <base64_encoded_payment_data>
+```
+
+**Payment data structure:**
+```json
+{
+  "version": 2,
+  "network": "eip155:84532",
+  "authorization": {
+    "from": "0x...",
+    "to": "0x...",
+    "value": "100000",
+    "validAfter": 0,
+    "validBefore": "115792089...",
+    "nonce": "0x...",
+    "v": 27,
+    "r": "0x...",
+    "s": "0x..."
+  }
+}
+```
+
+### Backward Compatibility
+
+x402 V2 servers still accept V1 payments via `X-PAYMENT` header for compatibility.
+
+## Facilitators
+
+402.cat uses **round-robin** across multiple facilitators for reliability:
+
+| Facilitator | URL | Status |
+|-------------|-----|--------|
+| PayAI | facilitator.payai.network | Primary |
+| httpcat | httpcat-facilitator.fly.dev | Secondary |
+| x402.org | www.x402.org/facilitator | Tertiary |
+| Railway | ts-2-facilitator-production.up.railway.app | Backup |
+| Dexter | x402.dexter.cash | Backup |
+| Coinbase CDP | api.cdp.coinbase.com | Optional (requires API key) |
+
+If one facilitator is down, the system automatically tries the next.
+
+## Payment Flow
+
+### Example: Buying a Token
+
+```
+1. httpcat buy MOON 0.10
+
+2. CLI → GET /tokens?symbol=MOON
+   ← 200 OK (free endpoint)
+
+3. CLI → POST /entrypoints/token_buy_0_10/invoke
+   ← 402 Payment Required
+   {
+     "cost": "0.10",
+     "facilitator": "facilitator.payai.network",
+     "nonce": "0x1234..."
+   }
+
+4. CLI → Sign EIP-3009 authorization
+   {
+     "from": "0xUser...",
+     "to": "0xFacilitator...",
+     "value": "100000",  // $0.10 in USDC
+     "nonce": "0x1234..."
+   }
+
+5. CLI → POST /entrypoints/token_buy_0_10/invoke
+   Headers: PAYMENT-SIGNATURE: <signature>
+   ← 200 OK
+   {
+     "success": true,
+     "data": {...}
+   }
+
+6. Facilitator → Settles on-chain (async, 300ms delay)
+```
+
+## Cost Structure
+
+### Free Endpoints
+
+No payment required:
+- `GET /health`
+- `GET /tokens` (list all)
+- `GET /tokens/:id` (token info - some details)
+- `GET /positions`
+- `GET /api/*` (read-only endpoints)
+
+### Paid Endpoints
+
+Require x402 payment:
+- `POST /tokens` ($0.01 - create)
+- `POST /entrypoints/token_buy_*` (variable)
+- `POST /entrypoints/token_sell` ($0.01)
+- `POST /entrypoints/token_info` ($0.0001)
+- `POST /entrypoints/*` (various costs)
+
+See [Fee Structure](/concepts/fees) for complete pricing.
+
+## Referral System
+
+Earn 10% of all fees by setting the `X-402-Referrer` header:
+
+```http
+POST /entrypoints/token_buy_0_10/invoke
+X-402-Referrer: 0xYourAddress...
+PAYMENT-SIGNATURE: <signature>
+```
+
+**Benefits:**
+- 10% of all fees from referred users
+- Includes both x402 and trading fees
+- Passive income from successful referrals
+- Claimable once minimum threshold reached
+
+**Example:**
+```
+User buys $0.20 of tokens via your referral link
+- x402 fee: $0.20
+- Trading fee: $0.002
+- Total fees: $0.202
+- Your cut: $0.0202 (10%)
+```
+
+## Implementation
+
+### httpcat-cli Handles This Automatically
+
+The CLI abstracts away all x402 complexity:
+
+```bash
+# You just run:
+httpcat buy MOON 0.10
+
+# CLI handles:
+# 1. Detecting 402 response
+# 2. Signing authorization
+# 3. Retrying with payment
+# 4. Verifying settlement
+```
+
+### Building Your Own Client
+
+If building a custom client:
+
+```typescript
+import { x402Client } from '@402/client';
+
+const client = new x402Client({
+  privateKey: process.env.PRIVATE_KEY,
+  network: 'eip155:84532'
+});
+
+// Automatic payment handling
+const response = await client.post('/entrypoints/token_buy_0_10/invoke', {
+  identifier: 'MOON',
+  amount: 0.10
+});
+
+// CLI handles 402 → sign → retry automatically
+```
+
+## Security
+
+<AccordionGroup>
+  <Accordion title="Nonce Protection" icon="fingerprint">
+    Each payment uses a unique nonce:
+    - Prevents replay attacks
+    - Cannot reuse signatures
+    - Validated on-chain
+  </Accordion>
+
+  <Accordion title="Signature Verification" icon="check-double">
+    EIP-3009 signatures are:
+    - Cryptographically secure (ECDSA)
+    - Tied to specific parameters
+    - Verifiable on-chain
+    - Cannot be forged
+  </Accordion>
+
+  <Accordion title="Amount Limits" icon="gauge-high">
+    Safety limits prevent accidents:
+    - Testnet: Max $0.20 per tx
+    - Mainnet: Max $200 per tx
+    - Client-side validation
+    - Server-side enforcement
+  </Accordion>
+
+  <Accordion title="Facilitator Trust" icon="shield">
+    Facilitators cannot:
+    - Steal funds (authorization is specific)
+    - Change amounts (signature validation)
+    - Reuse signatures (nonce tracking)
+
+    They can:
+    - Delay settlement (but not prevent)
+    - See payment details (transparent)
+  </Accordion>
+</AccordionGroup>
+
+## Benefits for AI Agents
+
+### Why x402 is Perfect for AI
+
+1. **No Wallet UI**: Agents can't interact with MetaMask/wallet UIs
+2. **Programmatic**: Simple HTTP signatures
+3. **Instant**: No waiting for confirmations
+4. **Gasless**: Agents don't manage gas fees
+5. **Micropayments**: Pay exactly for what you use
+
+### Example: AI Trading Agent
+
+```python
+import requests
+from x402 import sign_payment
+
+def trade_token(token, amount):
+    # Make request
+    response = requests.post(
+        'https://agent.402.cat/entrypoints/token_buy_0_10/invoke',
+        json={'identifier': token, 'amount': amount}
+    )
+
+    if response.status_code == 402:
+        # Sign payment
+        payment = sign_payment(
+            cost=response.json()['cost'],
+            facilitator=response.json()['facilitator'],
+            nonce=response.json()['nonce']
+        )
+
+        # Retry with payment
+        response = requests.post(
+            'https://agent.402.cat/entrypoints/token_buy_0_10/invoke',
+            json={'identifier': token, 'amount': amount},
+            headers={'PAYMENT-SIGNATURE': payment}
+        )
+
+    return response.json()
+```
+
+## Comparison to Alternatives
+
+| Feature | x402 | Traditional API Keys | On-Chain Only |
+|---------|------|---------------------|---------------|
+| **Setup** | Wallet only | Account registration | Wallet + gas |
+| **Cost** | Pay per use | Subscription | Gas per tx |
+| **Speed** | Instant | Instant | Block confirmation |
+| **Micropayments** | ✅ $0.0001+ | ❌ Not economical | ❌ Gas too high |
+| **Trustless** | ✅ Crypto signatures | ❌ API key trust | ✅ Blockchain |
+| **AI-Friendly** | ✅ Programmatic | ✅ Programmatic | ❌ Complex |
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card
+    title="Fee Structure"
+    icon="percent"
+    href="/concepts/fees"
+  >
+    Complete fee breakdown
+  </Card>
+  <Card
+    title="API Reference"
+    icon="code"
+    href="/api-reference/overview"
+  >
+    Explore all paid endpoints
+  </Card>
+  <Card
+    title="CLI Commands"
+    icon="terminal"
+    href="/cli/commands"
+  >
+    Use httpcat CLI (automatic x402)
+  </Card>
+  <Card
+    title="Examples"
+    icon="book"
+    href="/api-reference/examples/workflows"
+  >
+    See complete workflows
+  </Card>
+</CardGroup>
+
+<Tip>
+x402 makes micropayments practical. Instead of monthly subscriptions or complex blockchain interactions, you pay exactly what you use, when you use it.
+</Tip>

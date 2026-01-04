@@ -1,0 +1,542 @@
+---
+title: "MCP Server Setup"
+description: "Configure httpcat MCP server for Cursor, Claude Desktop, and other clients"
+---
+
+## Quick Setup
+
+<Steps>
+  <Step title="Install httpcat-cli">
+    Choose your preferred installation method:
+
+    <Tabs>
+      <Tab title="npx (Recommended for MCP)">
+        No installation needed! The MCP config will use npx to run httpcat automatically.
+      </Tab>
+      <Tab title="Global Install">
+        ```bash
+        npm install -g httpcat-cli
+        ```
+      </Tab>
+      <Tab title="Homebrew">
+        ```bash
+        brew tap hathbanger/httpcat
+        brew install httpcat
+        ```
+      </Tab>
+    </Tabs>
+  </Step>
+
+  <Step title="Get your private key">
+    You'll need a Base-compatible private key with USDC for trading.
+
+    <Warning>
+    Never hardcode your private key in config files. Use environment variables or your MCP client's secrets management.
+    </Warning>
+  </Step>
+
+  <Step title="Configure your MCP client">
+    Follow the instructions below for your specific client.
+  </Step>
+
+  <Step title="Test the connection">
+    Ask your AI assistant:
+    ```
+    "Check my httpcat balance"
+    ```
+
+    If it responds with your ETH and USDC balances, you're all set!
+  </Step>
+</Steps>
+
+## Cursor Configuration
+
+Cursor supports MCP natively. Configure in your MCP settings:
+
+### Location
+
+- **macOS/Linux**: `~/.cursor/mcp_settings.json`
+- **Windows**: `%APPDATA%\Cursor\mcp_settings.json`
+
+Or use Cursor's UI: **Settings** → **Extensions** → **MCP Servers**
+
+### Configuration (npx)
+
+```json
+{
+  "mcpServers": {
+    "httpcat": {
+      "command": "npx",
+      "args": ["-y", "httpcat-cli", "mcp-server"],
+      "env": {
+        "HTTPCAT_PRIVATE_KEY": "0x..."
+      }
+    }
+  }
+}
+```
+
+<Tip>
+Using npx ensures you always get the latest version of httpcat-cli without manual updates.
+</Tip>
+
+### Configuration (Global Install)
+
+If you installed httpcat-cli globally:
+
+```json
+{
+  "mcpServers": {
+    "httpcat": {
+      "command": "httpcat",
+      "args": ["mcp-server"],
+      "env": {
+        "HTTPCAT_PRIVATE_KEY": "0x..."
+      }
+    }
+  }
+}
+```
+
+### Using Environment Variables
+
+Instead of hardcoding the private key:
+
+```json
+{
+  "mcpServers": {
+    "httpcat": {
+      "command": "npx",
+      "args": ["-y", "httpcat-cli", "mcp-server"],
+      "env": {
+        "HTTPCAT_PRIVATE_KEY": "${HTTPCAT_PRIVATE_KEY}"
+      }
+    }
+  }
+}
+```
+
+Then set in your shell:
+
+```bash
+export HTTPCAT_PRIVATE_KEY="0x..."
+```
+
+### Restart Cursor
+
+After saving the configuration, restart Cursor to load the MCP server.
+
+## Claude Desktop Configuration
+
+Claude Desktop (Anthropic's official app) supports MCP.
+
+### Location
+
+- **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
+- **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
+- **Linux**: `~/.config/Claude/claude_desktop_config.json`
+
+### Configuration (npx)
+
+```json
+{
+  "mcpServers": {
+    "httpcat": {
+      "command": "npx",
+      "args": ["-y", "httpcat-cli", "mcp-server"],
+      "env": {
+        "HTTPCAT_PRIVATE_KEY": "0x..."
+      }
+    }
+  }
+}
+```
+
+### Configuration (Global Install)
+
+```json
+{
+  "mcpServers": {
+    "httpcat": {
+      "command": "httpcat",
+      "args": ["mcp-server"],
+      "env": {
+        "HTTPCAT_PRIVATE_KEY": "0x..."
+      }
+    }
+  }
+}
+```
+
+### Restart Claude Desktop
+
+Quit Claude Desktop completely and restart to load the MCP server.
+
+## Custom MCP Clients
+
+For other MCP-compatible clients:
+
+### Standard MCP Configuration
+
+```json
+{
+  "servers": {
+    "httpcat": {
+      "command": "npx",
+      "args": ["-y", "httpcat-cli", "mcp-server"],
+      "env": {
+        "HTTPCAT_PRIVATE_KEY": "0x..."
+      }
+    }
+  }
+}
+```
+
+### Programmatic Setup
+
+If you're building an MCP client:
+
+```typescript
+import { MCPClient } from '@modelcontextprotocol/sdk';
+
+const client = new MCPClient({
+  command: 'npx',
+  args: ['-y', 'httpcat-cli', 'mcp-server'],
+  env: {
+    HTTPCAT_PRIVATE_KEY: process.env.HTTPCAT_PRIVATE_KEY
+  }
+});
+
+await client.connect();
+```
+
+## Environment Configuration
+
+### Available Environment Variables
+
+Configure httpcat behavior via environment variables:
+
+```json
+{
+  "mcpServers": {
+    "httpcat": {
+      "command": "npx",
+      "args": ["-y", "httpcat-cli", "mcp-server"],
+      "env": {
+        "HTTPCAT_PRIVATE_KEY": "0x...",
+        "HTTPCAT_NETWORK": "eip155:84532",
+        "HTTPCAT_AGENT_URL": "https://agent.402.cat",
+        "HTTPCAT_RPC_URL": "https://sepolia.base.org"
+      }
+    }
+  }
+}
+```
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `HTTPCAT_PRIVATE_KEY` | Your private key | **Required** |
+| `HTTPCAT_NETWORK` | Network: `eip155:84532` (testnet) or `eip155:8453` (mainnet) | Auto-detected |
+| `HTTPCAT_AGENT_URL` | Agent endpoint | `https://agent.402.cat` |
+| `HTTPCAT_RPC_URL` | Custom RPC URL | Base default |
+
+### Network Selection
+
+<Tabs>
+  <Tab title="Base Sepolia (Testnet)">
+    ```json
+    {
+      "env": {
+        "HTTPCAT_PRIVATE_KEY": "0x...",
+        "HTTPCAT_NETWORK": "eip155:84532"
+      }
+    }
+    ```
+
+    **Perfect for:**
+    - Testing and learning
+    - Free testnet USDC
+    - No financial risk
+  </Tab>
+
+  <Tab title="Base (Mainnet)">
+    ```json
+    {
+      "env": {
+        "HTTPCAT_PRIVATE_KEY": "0x...",
+        "HTTPCAT_NETWORK": "eip155:8453"
+      }
+    }
+    ```
+
+    **Perfect for:**
+    - Real token launches
+    - Production trading
+    - Actual value transfers
+  </Tab>
+</Tabs>
+
+<Note>
+If you don't specify `HTTPCAT_NETWORK`, it will be auto-detected from your wallet's transactions.
+</Note>
+
+## Security Best Practices
+
+<AccordionGroup>
+  <Accordion title="Private Key Management" icon="key">
+    **DO:**
+    - Use environment variables
+    - Use your MCP client's secrets management
+    - Use different keys for testnet and mainnet
+    - Rotate keys regularly
+
+    **DON'T:**
+    - Commit keys to version control
+    - Hardcode keys in config files
+    - Share keys in screenshots
+    - Reuse keys across projects
+  </Accordion>
+
+  <Accordion title="Environment Variables" icon="shield">
+    **Best approach:**
+
+    1. Create a `.env` file (add to `.gitignore`):
+       ```bash
+       HTTPCAT_PRIVATE_KEY=0x...
+       ```
+
+    2. Load in your shell:
+       ```bash
+       source .env
+       ```
+
+    3. Reference in MCP config:
+       ```json
+       {
+         "env": {
+           "HTTPCAT_PRIVATE_KEY": "${HTTPCAT_PRIVATE_KEY}"
+         }
+       }
+       ```
+  </Accordion>
+
+  <Accordion title="Testing Setup" icon="flask">
+    Always test with testnet first:
+
+    1. Use Base Sepolia network
+    2. Get free testnet tokens from faucets
+    3. Verify tools work correctly
+    4. Then switch to mainnet with real funds
+  </Accordion>
+
+  <Accordion title="Backup & Recovery" icon="floppy-disk">
+    - Back up your seed phrase (not private key)
+    - Store offline in secure location
+    - Never share with anyone
+    - Consider hardware wallet for mainnet
+  </Accordion>
+</AccordionGroup>
+
+## Verifying Setup
+
+### Test Connection
+
+Ask your AI assistant to run a health check:
+
+```
+"Check if httpcat is working"
+```
+
+Expected response:
+```
+The httpcat agent is healthy and running on [network].
+```
+
+### Test Balance
+
+```
+"What's my wallet balance?"
+```
+
+Expected response:
+```
+Your wallet has:
+- ETH: 0.005
+- USDC: 10.00
+```
+
+### Test Token Info
+
+```
+"Get information about MOON token"
+```
+
+Expected response should include token details, price, and market cap.
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="MCP server not found" icon="circle-exclamation">
+    **Symptoms:** AI assistant says httpcat tools are unavailable
+
+    **Solutions:**
+    1. Restart your MCP client completely
+    2. Verify config file location
+    3. Check command path:
+       ```bash
+       which httpcat  # For global install
+       npx httpcat-cli --version  # For npx
+       ```
+    4. Check MCP client logs for errors
+  </Accordion>
+
+  <Accordion title="Private key errors" icon="key">
+    **Symptoms:** "Invalid private key" or "Authentication failed"
+
+    **Solutions:**
+    1. Verify key format starts with `0x`
+    2. Ensure key is 64 hex characters (+ `0x` prefix)
+    3. Check environment variable is set:
+       ```bash
+       echo $HTTPCAT_PRIVATE_KEY
+       ```
+    4. Try hardcoding temporarily to test
+  </Accordion>
+
+  <Accordion title="Network connection errors" icon="wifi">
+    **Symptoms:** "Cannot connect to agent" or timeout errors
+
+    **Solutions:**
+    1. Check internet connection
+    2. Verify agent URL is reachable:
+       ```bash
+       curl https://agent.402.cat/health
+       ```
+    3. Check for firewall/proxy issues
+    4. Try custom agent URL if needed
+  </Accordion>
+
+  <Accordion title="Tool execution failures" icon="triangle-exclamation">
+    **Symptoms:** Tools return errors or unexpected results
+
+    **Solutions:**
+    1. Check wallet has USDC for operations
+    2. Check wallet has ETH for gas fees
+    3. Verify network matches your funds
+    4. Try the same operation via CLI:
+       ```bash
+       httpcat balance
+       httpcat health
+       ```
+    5. Check httpcat-cli logs
+  </Accordion>
+
+  <Accordion title="Version mismatch" icon="code-branch">
+    **Symptoms:** Tools behave differently than documented
+
+    **Solutions:**
+    1. Update to latest version:
+       ```bash
+       npm update -g httpcat-cli
+       ```
+    2. For npx, it auto-updates on each run
+    3. Check version:
+       ```bash
+       httpcat --version
+       ```
+    4. Clear npm cache if needed:
+       ```bash
+       npm cache clean --force
+       ```
+  </Accordion>
+</AccordionGroup>
+
+## Advanced Configuration
+
+### Multiple Environments
+
+Configure different environments for different use cases:
+
+```json
+{
+  "mcpServers": {
+    "httpcat-testnet": {
+      "command": "npx",
+      "args": ["-y", "httpcat-cli", "mcp-server"],
+      "env": {
+        "HTTPCAT_PRIVATE_KEY": "0x...testnet_key",
+        "HTTPCAT_NETWORK": "eip155:84532"
+      }
+    },
+    "httpcat-mainnet": {
+      "command": "npx",
+      "args": ["-y", "httpcat-cli", "mcp-server"],
+      "env": {
+        "HTTPCAT_PRIVATE_KEY": "0x...mainnet_key",
+        "HTTPCAT_NETWORK": "eip155:8453"
+      }
+    }
+  }
+}
+```
+
+Then specify which to use when talking to AI:
+```
+"Using httpcat-testnet, check my balance"
+"Using httpcat-mainnet, create a token"
+```
+
+### Custom RPC Endpoint
+
+Use a custom RPC provider for better reliability:
+
+```json
+{
+  "env": {
+    "HTTPCAT_PRIVATE_KEY": "0x...",
+    "HTTPCAT_RPC_URL": "https://base-mainnet.g.alchemy.com/v2/YOUR_KEY"
+  }
+}
+```
+
+Recommended providers:
+- [Alchemy](https://alchemy.com)
+- [Infura](https://infura.io)
+- [QuickNode](https://quicknode.com)
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card
+    title="Tools Reference"
+    icon="toolbox"
+    href="/mcp/tools"
+  >
+    Learn all 11 available MCP tools
+  </Card>
+  <Card
+    title="CLI Commands"
+    icon="terminal"
+    href="/cli/commands"
+  >
+    Understand underlying CLI commands
+  </Card>
+  <Card
+    title="Examples"
+    icon="book"
+    href="/api-reference/examples/workflows"
+  >
+    See complete workflow examples
+  </Card>
+  <Card
+    title="API Reference"
+    icon="code"
+    href="/api-reference/overview"
+  >
+    Build custom integrations
+  </Card>
+</CardGroup>
+
+<Tip>
+Once configured, try asking your AI: "Create a test token on httpcat" to verify everything works!
+</Tip>

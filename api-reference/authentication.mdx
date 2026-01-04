@@ -1,0 +1,62 @@
+---
+title: "Authentication"
+description: "x402 micropayment authentication"
+---
+
+## x402 Protocol
+
+402.cat uses x402 micropayment protocol instead of API keys. Pay per request with USDC.
+
+## Payment Flow
+
+<Steps>
+  <Step title="Request">
+    Make request to protected endpoint
+  </Step>
+  <Step title="402 Response">
+    Server returns `HTTP 402 Payment Required` with payment details
+  </Step>
+  <Step title="Sign">
+    Create EIP-3009 authorization signature
+  </Step>
+  <Step title="Retry">
+    Retry request with `PAYMENT-SIGNATURE` header
+  </Step>
+</Steps>
+
+## Headers
+
+**V2 (Current):**
+```http
+PAYMENT-SIGNATURE: <base64_payment_data>
+```
+
+**V1 (Backward Compatible):**
+```http
+X-PAYMENT: <base64_payment_data>
+```
+
+## Using httpcat-cli
+
+CLI handles authentication automatically:
+
+```bash
+httpcat buy MOON 0.10
+# Automatically signs and pays
+```
+
+## Manual Implementation
+
+See [x402 Protocol](/concepts/x402-protocol) for detailed implementation guide.
+
+## Referrals
+
+Add referrer header to earn 10% of fees:
+
+```http
+X-402-Referrer: 0xYourAddress...
+```
+
+<Card title="x402 Protocol Details" icon="link" href="/concepts/x402-protocol">
+  Complete x402 documentation
+</Card>

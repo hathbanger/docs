@@ -1,0 +1,389 @@
+---
+title: "Bonding Curve"
+description: "How 402.cat's constant product bonding curve works"
+---
+
+## Overview
+
+402.cat uses a **constant product** bonding curve (similar to Uniswap and Pump.fun) to provide instant liquidity for newly created tokens. Tokens trade on the curve until graduation, when they automatically move to Uniswap V4.
+
+## The Formula
+
+The bonding curve follows the **constant product formula**:
+
+```
+k = virtual_usdc × virtual_tokens
+```
+
+Where `k` is a constant that never changes (the invariant).
+
+### Buy Formula
+
+When you buy tokens, you add USDC to the curve and remove tokens:
+
+```
+tokens_out = virtual_tokens - (k / (virtual_usdc + usdc_in))
+```
+
+### Sell Formula
+
+When you sell tokens, you add tokens to the curve and remove USDC:
+
+```
+usdc_out = virtual_usdc - (k / (virtual_tokens + tokens_in))
+```
+
+## Virtual vs Real Reserves
+
+402.cat implements a **dual reserve system** (Pump.fun model):
+
+### Virtual Reserves (For Pricing)
+
+Used to calculate prices via the constant product formula:
+
+- **virtual_usdc**: Virtual USDC reserve
+  - Initial: `7,403,872` ($7.40)
+  - Increases on buys, decreases on sells
+- **virtual_tokens**: Virtual token reserve
+  - Initial: `1,073,025` tokens (1,073,025,000,000,000,000,000,000 with 18 decimals)
+  - Decreases on buys, increases on sells
+
+### Real Reserves (Actual Holdings)
+
+Tracks actual tradeable assets:
+
+- **real_usdc**: Actual USDC deposited
+  - Initial: `0`
+  - Accumulates from net buys (after fees)
+  - Used for LP creation at graduation
+- **real_tokens**: Tokens available for purchase
+  - Initial: `793,100` tokens (79.31% of total supply)
+  - Decreases on buys, increases on sells
+  - **Graduation triggers when this reaches 0**
+
+<Note>
+**Key Insight**: Virtual reserves determine price via the formula, while real reserves track what's actually available for trading.
+</Note>
+
+## Initial Conditions
+
+For a 1,000,000 token supply on testnet:
+
+| Parameter | Value | Notes |
+|-----------|-------|-------|
+| **Total Supply** | 1,000,000 tokens | Fixed at creation |
+| **Real Tokens** | 793,100 tokens | 79.31% available for trading |
+| **LP Reserve** | 206,900 tokens | 20.69% reserved for liquidity |
+| **Virtual USDC** | 7,403,872 ($7.40) | Initial virtual reserve |
+| **Virtual Tokens** | 1,073,025 tokens | Initial virtual reserve |
+| **Real USDC** | $0 | Accumulates from trades |
+| **Initial Market Cap** | $6.90 | Starting valuation |
+| **Initial Price** | ~$0.0000069 | Starting token price |
+
+The constant `k` is calculated as:
+
+```
+k = virtual_usdc × virtual_tokens
+k = 7,403,872 × 1,073,025,000,000,000,000,000,000
+k ≈ 7.94 × 10^30
+```
+
+### Virtual Token Derivation
+
+Virtual tokens are derived mathematically to ensure the graduation price matches the LP price:
+
+```
+T_v = T_r² / (2×T_r - total_supply)
+```
+
+Where:
+- `T_v` = virtual_tokens
+- `T_r` = real_tokens (793,100)
+- `total_supply` = 1,000,000
+
+This ensures smooth price continuity between the bonding curve and the Uniswap V4 pool after graduation.
+
+## Price Calculation
+
+### Current Price (Spot Price)
+
+The current price per token is:
+
+```
+price = (virtual_usdc / 10^6) / (virtual_tokens / 10^18)
+```
+
+Result is in USDC per token.
+
+### Market Cap
+
+Market cap is the current price multiplied by total supply:
+
+```
+market_cap = price × (total_supply / 10^18)
+```
+
+### Graduation Progress
+
+Track how close a token is to graduation:
+
+```
+progress = (initial_real_tokens - current_real_tokens) / initial_real_tokens
+```
+
+Returns 0.0 to 1.0 (0% to 100%).
+
+## Buy and Sell Mechanics
+
+### Buy Operation
+
+1. **Calculate fee**: `fee = usdc_in × 1% = usdc_in × 100 / 10000`
+2. **Net USDC**: `net_usdc = usdc_in - fee`
+3. **Calculate tokens** using virtual reserves:
+   ```
+   tokens_out = virtual_tokens - (k / (virtual_usdc + net_usdc))
+   ```
+4. **Check availability**: Ensure `tokens_out ≤ real_tokens`
+5. **Update reserves**:
+   - `virtual_usdc += net_usdc`
+   - `virtual_tokens -= tokens_out`
+   - `real_usdc += net_usdc`
+   - `real_tokens -= tokens_out`
+
+### Sell Operation
+
+1. **Calculate gross USDC** using virtual reserves:
+   ```
+   gross_usdc = virtual_usdc - (k / (virtual_tokens + tokens_in))
+   ```
+2. **Check availability**: Ensure `gross_usdc ≤ real_usdc`
+3. **Calculate fee**: `fee = gross_usdc × 1% = gross_usdc × 100 / 10000`
+4. **Net USDC to user**: `net_usdc = gross_usdc - fee`
+5. **Update reserves**:
+   - `virtual_usdc -= gross_usdc`
+   - `virtual_tokens += tokens_in`
+   - `real_usdc -= gross_usdc`
+   - `real_tokens += tokens_in`
+
+### Atomic Execution
+
+All buy/sell operations use **PostgreSQL row-level locking** (`FOR UPDATE`) to prevent race conditions during concurrent trades. This ensures the bonding curve state remains consistent even under high-frequency trading.
+
+## Fee Structure
+
+### Bonding Curve Phase
+
+- **Buy Fee**: 1% (100 basis points)
+  - Added to the payment amount
+  - Example: Buy $0.10 worth = pay $0.101 total
+- **Sell Fee**: 1% (100 basis points)
+  - Deducted from proceeds
+  - Example: Sell for $0.10 = receive $0.099
+
+Fees go to the platform and are used for:
+- Platform operations
+- LP token distribution at graduation
+- Referral rewards (10% of fees)
+
+### Post-Graduation (Uniswap V4)
+
+After graduation, trades happen on Uniswap V4 with a custom hook:
+
+- **Hook Fee**: ~0.3% (30 basis points)
+- **Fee Distribution**:
+  - 33% to token creator
+  - 33% to platform
+  - 33% to LP holders
+
+## Graduation Mechanism
+
+### Trigger
+
+Graduation occurs when **all real tokens are sold**:
+
+```
+real_tokens == 0
+```
+
+At this point:
+- All 793,100 tradeable tokens have been purchased
+- Market cap has reached the graduation threshold
+- The bonding curve is "complete"
+
+### Testnet vs Mainnet
+
+| Network | Initial Mcap | Graduation Threshold | Total Supply |
+|---------|-------------|----------------------|--------------|
+| **Base Sepolia** | $6.90 | ~$69 | 1,000,000 |
+| **Base** | $6,900 | ~$69,000 | 1,000,000 |
+
+### What Happens at Graduation
+
+1. **Airdrop**: Remaining LP reserve tokens (206,900) are airdropped to existing holders proportionally
+2. **LP Creation**: Uniswap V4 pool is created with:
+   - All accumulated `real_usdc`
+   - LP reserve tokens (206,900)
+3. **LP Locking**: 80% of LP tokens are locked forever
+4. **Creator Reward**: 20% of LP tokens go to the token creator
+5. **Hook Deployment**: Cat402Hook is attached for fee distribution
+
+See [Graduation](/concepts/graduation) for detailed documentation.
+
+## Price Impact
+
+The constant product formula creates **automatic price slippage** - larger trades have higher price impact:
+
+### Example: Buy Impact
+
+Buying $1 USDC worth when `virtual_usdc = 7,403,872`:
+
+- **Small buy** ($0.10): ~0.00135% price impact
+- **Medium buy** ($1.00): ~0.0135% price impact
+- **Large buy** ($10.00): ~0.135% price impact
+
+Price impact increases non-linearly with trade size.
+
+### No Additional Slippage Parameters
+
+Unlike DEXes, the bonding curve has **no slippage tolerance settings**. The constant product formula automatically determines the execution price based on the trade size and current reserves.
+
+## Comparison to Pump.fun
+
+402.cat's bonding curve is modeled after Pump.fun with key similarities:
+
+| Feature | 402.cat | Pump.fun |
+|---------|---------|----------|
+| **Formula** | Constant product (x×y=k) | Constant product (x×y=k) |
+| **Reserves** | Virtual + Real separation | Virtual + Real separation |
+| **Graduation** | To Uniswap V4 | To Raydium |
+| **LP Distribution** | 80% locked, 20% creator | Similar distribution |
+| **Fee Model** | 1% buy/sell | 1% buy/sell |
+
+**Key Differences**:
+- **Network**: Base (Ethereum L2) vs Solana
+- **Graduation DEX**: Uniswap V4 vs Raydium
+- **Hook System**: Custom V4 hooks for fees vs Raydium standard
+- **Payment Protocol**: x402 micropayments vs SOL gas fees
+
+## Advanced Topics
+
+### Invariant Preservation
+
+The constant `k` must remain unchanged throughout trading:
+
+```
+k_before = virtual_usdc_before × virtual_tokens_before
+k_after = virtual_usdc_after × virtual_tokens_after
+
+// This must be true:
+k_before == k_after
+```
+
+Any deviation indicates a bug in the implementation.
+
+### Price Continuity
+
+The virtual reserve design ensures **price continuity** at graduation:
+
+```
+bonding_curve_price = virtual_usdc / virtual_tokens
+graduation_lp_price = real_usdc / lp_tokens
+
+// These should be approximately equal
+bonding_curve_price ≈ graduation_lp_price
+```
+
+This prevents arbitrage opportunities during the graduation transition.
+
+### Edge Cases
+
+**Last Tokens Available**:
+- If a buy would exceed `real_tokens`, the buy is capped at available tokens
+- User receives whatever is left at the calculated price
+- Transaction succeeds, token graduates immediately
+
+**Insufficient Liquidity on Sells**:
+- If `gross_usdc > real_usdc`, the sell fails
+- This can happen if many people sell after a large buy
+- Rare in practice due to balanced in/out flows
+
+## Monitoring the Curve
+
+### Key Metrics to Watch
+
+1. **Graduation Progress**: How close to selling out
+   ```
+   progress = 1 - (real_tokens / initial_real_tokens)
+   ```
+
+2. **Price Trend**: Is the price increasing or decreasing
+   ```
+   price_change = (current_price - previous_price) / previous_price
+   ```
+
+3. **Volume**: Total USDC traded
+   ```
+   volume = real_usdc + total_fees
+   ```
+
+4. **Holder Distribution**: Who owns the tokens
+   - Check via positions endpoint
+   - High concentration = risky
+   - Distributed = healthier
+
+### API Endpoints
+
+Check bonding curve state via:
+
+```bash
+# Get full bonding curve state
+GET /tokens/:id
+
+# Returns:
+{
+  "bondingCurve": {
+    "virtualUsdc": "7500000",
+    "virtualTokens": "1070000...",
+    "realUsdc": "150000",
+    "realTokens": "920000...",
+    "k": "8025000..."
+  }
+}
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card
+    title="Graduation"
+    icon="graduation-cap"
+    href="/concepts/graduation"
+  >
+    Learn about the graduation process
+  </Card>
+  <Card
+    title="Fee Structure"
+    icon="percent"
+    href="/concepts/fees"
+  >
+    Understand all fees in the system
+  </Card>
+  <Card
+    title="Token Lifecycle"
+    icon="repeat"
+    href="/concepts/token-lifecycle"
+  >
+    Complete journey from creation to graduation
+  </Card>
+  <Card
+    title="API Reference"
+    icon="code"
+    href="/api-reference/overview"
+  >
+    Build applications on the bonding curve
+  </Card>
+</CardGroup>
+
+<Tip>
+The bonding curve is deterministic - given the same reserves, the price is always the same. This makes it predictable and fair for all participants.
+</Tip>

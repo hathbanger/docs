@@ -1,97 +1,230 @@
 ---
-title: "Introduction"
-description: "Welcome to the new home for your documentation"
+title: "Welcome to 402.cat"
+description: "Token creation and trading platform powered by x402 micropayments"
 ---
 
-## Setting up
+## What is 402.cat?
 
-Get your documentation site up and running in minutes.
+402.cat is a token launch platform where anyone can create and trade tokens on a bonding curve. Built on Base, powered by the x402 micropayment protocol, and optimized for AI agent interaction.
+
+<CardGroup cols={2}>
+  <Card
+    title="Create Tokens"
+    icon="coins"
+  >
+    Launch tokens on a bonding curve with just $0.01 USDC
+  </Card>
+  <Card
+    title="Trade Instantly"
+    icon="chart-line"
+  >
+    Buy and sell with automatic micropayments via x402 protocol
+  </Card>
+  <Card
+    title="Graduate to Uniswap"
+    icon="rocket"
+  >
+    Tokens automatically graduate to Uniswap V4 at market cap threshold
+  </Card>
+  <Card
+    title="AI-Powered"
+    icon="robot"
+  >
+    Full MCP server support for Claude, Cursor, and other AI assistants
+  </Card>
+</CardGroup>
+
+## Get Started
 
 <Card
-  title="Start here"
-  icon="rocket"
+  title="Quick Start Guide"
+  icon="bolt"
   href="/quickstart"
-  horizontal
 >
-  Follow our three step quickstart guide.
+  Get up and running in 5 minutes with httpcat-cli
 </Card>
 
-## Make it yours
+## Platform Features
 
-Design a docs site that looks great and empowers your users.
+### httpcat-cli
 
-<Columns cols={2}>
+Command-line interface for token operations with interactive shell, ASCII cats, and JSON mode for automation.
+
+<CardGroup cols={2}>
   <Card
-    title="Edit locally"
-    icon="pen-to-square"
-    href="/development"
+    title="Installation"
+    icon="download"
+    href="/cli/installation"
   >
-    Edit your docs locally and preview them in real time.
+    Install via npm, Homebrew, or npx
   </Card>
   <Card
-    title="Customize your site"
-    icon="palette"
-    href="/essentials/settings"
-  >
-    Customize the design and colors of your site to match your brand.
-  </Card>
-    <Card
-    title="Set up navigation"
-    icon="map"
-    href="/essentials/navigation"
-  >
-    Organize your docs to help users find what they need and succeed with your product.
-  </Card>
-  <Card
-    title="API documentation"
+    title="Commands"
     icon="terminal"
-    href="/api-reference/introduction"
+    href="/cli/commands"
   >
-    Auto-generate API documentation from OpenAPI specifications.
-  </Card>
-</Columns>
-
-## Create beautiful pages
-
-Everything you need to create world-class documentation.
-
-<Columns cols={2}>
-  <Card
-    title="Write with MDX"
-    icon="pen-fancy"
-    href="/essentials/markdown"
-  >
-    Use MDX to style your docs pages.
+    Complete reference for all CLI commands
   </Card>
   <Card
-    title="Code samples"
+    title="Configuration"
+    icon="gear"
+    href="/cli/configuration"
+  >
+    Set up your wallet, network, and preferences
+  </Card>
+</CardGroup>
+
+### MCP Server
+
+Expose httpcat functionality to AI assistants through the Model Context Protocol.
+
+<CardGroup cols={2}>
+  <Card
+    title="MCP Overview"
+    icon="plug"
+    href="/mcp/overview"
+  >
+    Learn about MCP and AI agent integration
+  </Card>
+  <Card
+    title="Setup Guide"
+    icon="wrench"
+    href="/mcp/setup"
+  >
+    Configure MCP for Cursor, Claude Desktop, and more
+  </Card>
+  <Card
+    title="Available Tools"
+    icon="toolbox"
+    href="/mcp/tools"
+  >
+    11 tools for creating, trading, and chatting
+  </Card>
+</CardGroup>
+
+## Core Concepts
+
+Understand how 402.cat works under the hood.
+
+<CardGroup cols={3}>
+  <Card
+    title="Bonding Curve"
+    icon="chart-area"
+    href="/concepts/bonding-curve"
+  >
+    Constant product formula, virtual/real reserves
+  </Card>
+  <Card
+    title="Graduation"
+    icon="graduation-cap"
+    href="/concepts/graduation"
+  >
+    Automatic Uniswap V4 pool creation
+  </Card>
+  <Card
+    title="Fee Structure"
+    icon="percent"
+    href="/concepts/fees"
+  >
+    1% trading fees, 10% referral rewards
+  </Card>
+  <Card
+    title="x402 Protocol"
+    icon="money-bill-wave"
+    href="/concepts/x402-protocol"
+  >
+    Micropayment protocol powering the platform
+  </Card>
+  <Card
+    title="Token Lifecycle"
+    icon="repeat"
+    href="/concepts/token-lifecycle"
+  >
+    From creation to graduation
+  </Card>
+  <Card
+    title="Chat System"
+    icon="comments"
+    href="/concepts/chat"
+  >
+    Token-specific and general chat rooms
+  </Card>
+</CardGroup>
+
+## API Reference
+
+Build applications and AI agents with the 402.cat API.
+
+<CardGroup cols={2}>
+  <Card
+    title="API Overview"
+    icon="book"
+    href="/api-reference/overview"
+  >
+    Base URLs, networks, and getting started
+  </Card>
+  <Card
+    title="Authentication"
+    icon="key"
+    href="/api-reference/authentication"
+  >
+    x402 micropayment authentication
+  </Card>
+  <Card
+    title="Token Operations"
+    icon="coins"
+    href="/api-reference/tokens/create"
+  >
+    Create, buy, sell, and query tokens
+  </Card>
+  <Card
+    title="Trading"
+    icon="exchange"
+    href="/api-reference/trading/universal-buy"
+  >
+    Universal swaps and MEV-protected trades
+  </Card>
+  <Card
+    title="Examples"
     icon="code"
-    href="/essentials/code"
+    href="/api-reference/examples/workflows"
   >
-    Add sample code to demonstrate how to use your product.
+    Complete workflows and integration patterns
+  </Card>
+</CardGroup>
+
+## Networks
+
+<CardGroup cols={2}>
+  <Card
+    title="Base Sepolia (Testnet)"
+    icon="flask"
+  >
+    `eip155:84532` - Free testnet USDC, perfect for testing
   </Card>
   <Card
-    title="Images"
-    icon="image"
-    href="/essentials/images"
+    title="Base (Mainnet)"
+    icon="globe"
   >
-    Display images and other media.
+    `eip155:8453` - Production trading with real USDC
+  </Card>
+</CardGroup>
+
+## Community
+
+<CardGroup cols={2}>
+  <Card
+    title="GitHub"
+    icon="github"
+    href="https://github.com"
+  >
+    View the source code and contribute
   </Card>
   <Card
-    title="Reusable snippets"
-    icon="recycle"
-    href="/essentials/reusable-snippets"
+    title="x402.org"
+    icon="link"
+    href="https://x402.org"
   >
-    Write once and reuse across your docs.
+    Learn more about the x402 protocol
   </Card>
-</Columns>
-
-## Need inspiration?
-
-<Card
-  title="See complete examples"
-  icon="stars"
-  href="https://mintlify.com/customers"
->
-  Browse our showcase of exceptional documentation sites.
-</Card>
+</CardGroup>

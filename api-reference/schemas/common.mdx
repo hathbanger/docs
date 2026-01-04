@@ -1,0 +1,78 @@
+---
+title: "Common Schemas"
+description: "Shared data structures across the API"
+---
+
+## Response Wrapper
+
+All responses follow this structure:
+
+```typescript
+{
+  success: boolean;
+  operation: string;
+  data?: any;
+  error?: {
+    code: string;
+    message: string;
+    details?: any;
+  };
+}
+```
+
+## Token Object
+
+```typescript
+{
+  tokenId: string;
+  tokenAddress: string;
+  name: string;
+  symbol: string;
+  creator: string;
+  createdAt: string;
+  status: "active" | "graduating" | "graduated";
+  price: string;
+  mcap: string;
+  totalSupply: string;
+  graduationProgress: number;
+}
+```
+
+## User Position
+
+```typescript
+{
+  tokensOwned: string;
+  usdcInvested: string;
+  currentValue: string;
+  pnl: string;
+  roi: string;
+  percentOfSupply: string;
+}
+```
+
+## Bonding Curve State
+
+```typescript
+{
+  virtualUsdc: string;
+  virtualTokens: string;
+  realUsdc: string;
+  realTokens: string;
+  k: string;
+}
+```
+
+## Transaction
+
+```typescript
+{
+  txId: string;
+  type: "buy" | "sell" | "airdrop";
+  amount: string;
+  price: string;
+  fee: string;
+  timestamp: string;
+  txHash?: string;
+}
+```

@@ -1,0 +1,729 @@
+---
+title: "MCP Tools Reference"
+description: "Complete reference for all 11 httpcat MCP tools"
+---
+
+## Overview
+
+The httpcat MCP server provides 11 tools for token operations, trading, portfolio management, and chat. All tools return structured JSON responses.
+
+## Tool Categories
+
+<CardGroup cols={3}>
+  <Card title="Token Operations" icon="coins">
+    create_token, buy_token, sell_token, token_info, list_tokens
+  </Card>
+  <Card title="Portfolio" icon="wallet">
+    check_balance
+  </Card>
+  <Card title="Chat & Social" icon="comments">
+    chat_join, chat_send_message, chat_renew_lease, chat_get_recent_messages
+  </Card>
+  <Card title="System" icon="server">
+    health_check
+  </Card>
+</CardGroup>
+
+---
+
+## Token Operations
+
+### create_token
+
+Create a new token on the bonding curve.
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `name` | string | Yes | Token name |
+| `symbol` | string | Yes | Token symbol (ticker) |
+| `photoUrl` | string | No | Token photo (URL, file path, or base64) |
+| `bannerUrl` | string | No | Banner image URL |
+| `websiteUrl` | string | No | Website URL |
+| `privateKey` | string | No | Override private key for this call |
+
+**Cost:** $0.01 USDC
+
+**Returns:**
+
+```json
+{
+  "success": true,
+  "operation": "create_token",
+  "data": {
+    "tokenId": "abc123-4567-...",
+    "tokenAddress": "0x1234567890123456789012345678901234567402",
+    "name": "Moon Cat",
+    "symbol": "MOON",
+    "status": "active",
+    "initialMcap": "6.90",
+    "creator": "0x..."
+  }
+}
+```
+
+**Example usage:**
+
+Ask your AI:
+```
+"Create a token called Moon Cat with symbol MOON"
+"Create Purrfect token (PURR) with website https://purrfect.cat"
+```
+
+<Note>
+Token addresses end in `402` for easy identification.
+</Note>
+
+---
+
+### buy_token
+
+Buy tokens from the bonding curve.
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `identifier` | string | Yes | Token address, UUID, name, or symbol |
+| `amount` | number | Yes | USDC amount to spend |
+| `privateKey` | string | No | Override private key for this call |
+
+**Amount values:**
+- **Testnet**: `0.05`, `0.10`, `0.20` USDC
+- **Mainnet**: `50`, `100`, `200` USDC
+
+**Cost:** Amount + 1% fee
+
+**Returns:**
+
+```json
+{
+  "success": true,
+  "operation": "buy_token",
+  "data": {
+    "tokenId": "...",
+    "tokenAddress": "0x...402",
+    "tokensReceived": "1234.567",
+    "usdcSpent": "0.10",
+    "fee": "0.001",
+    "price": "0.0000812",
+    "newMcap": "7.12",
+    "graduationProgress": "0.15",
+    "userPosition": {
+      "tokensOwned": "1234.567",
+      "usdcInvested": "0.10",
+      "currentValue": "0.1002",
+      "pnl": "0.0002",
+      "roi": "0.20"
+    }
+  }
+}
+```
+
+**Example usage:**
+
+Ask your AI:
+```
+"Buy $0.20 worth of MOON tokens"
+"Buy 0.10 USDC of token 0x1234...402"
+"Purchase MOON for 0.05 USDC"
+```
+
+<Tip>
+Use contract addresses (0x...402) for unambiguous identification. If multiple tokens share the same name/symbol, the system auto-selects the one with highest graduation progress.
+</Tip>
+
+---
+
+### sell_token
+
+Sell tokens back to the bonding curve.
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `identifier` | string | Yes | Token address, UUID, name, or symbol |
+| `amount` | string | Yes | Number, percentage ("50%"), or "all" |
+| `privateKey` | string | No | Override private key for this call |
+
+**Cost:** 1% fee deducted from proceeds
+
+**Returns:**
+
+```json
+{
+  "success": true,
+  "operation": "sell_token",
+  "data": {
+    "tokenId": "...",
+    "tokenAddress": "0x...402",
+    "tokensSold": "617.284",
+    "usdcReceived": "0.05",
+    "fee": "0.00053",
+    "price": "0.0000810",
+    "userPosition": {
+      "tokensOwned": "617.283",
+      "usdcInvested": "0.05",
+      "currentValue": "0.05",
+      "pnl": "0.00",
+      "roi": "0.00"
+    }
+  }
+}
+```
+
+**Example usage:**
+
+Ask your AI:
+```
+"Sell 50% of my MOON tokens"
+"Sell all my position in MOON"
+"Sell 1000 MOON tokens"
+```
+
+---
+
+### token_info
+
+Get detailed information about a token including your position.
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `identifier` | string | Yes | Token address, UUID, name, or symbol |
+| `privateKey` | string | No | Override private key for this call |
+
+**Cost:** $0.0001 USDC
+
+**Returns:**
+
+```json
+{
+  "success": true,
+  "operation": "token_info",
+  "data": {
+    "tokenId": "...",
+    "tokenAddress": "0x...402",
+    "name": "Moon Cat",
+    "symbol": "MOON",
+    "creator": "0x...",
+    "createdAt": "2024-01-04T...",
+    "status": "active",
+    "price": "0.0000812",
+    "mcap": "81.20",
+    "totalSupply": "1000000",
+    "graduationProgress": "0.15",
+    "graduationThreshold": "69.00",
+    "bondingCurve": {
+      "virtualUsdc": "7500000",
+      "virtualTokens": "1070000000000000000000000",
+      "realUsdc": "150000",
+      "realTokens": "920000000000000000000000",
+      "k": "8025000000000000000000000000000"
+    },
+    "userPosition": {
+      "tokensOwned": "1234.567",
+      "usdcInvested": "0.10",
+      "currentValue": "0.1002",
+      "pnl": "0.0002",
+      "roi": "0.20",
+      "percentOfSupply": "0.1234"
+    }
+  }
+}
+```
+
+**Example usage:**
+
+Ask your AI:
+```
+"Get info about MOON token"
+"What's the current price of Moon Cat?"
+"Show me my position in MOON"
+```
+
+---
+
+### list_tokens
+
+List all tokens with pagination and sorting.
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `page` | number | No | Page number (default: 1) |
+| `limit` | number | No | Items per page (default: 20, max: 100) |
+| `sort` | string | No | Sort by: "mcap", "created", "name" (default: "mcap") |
+| `privateKey` | string | No | Override private key for this call |
+
+**Cost:** $0.0001 USDC
+
+**Returns:**
+
+```json
+{
+  "success": true,
+  "operation": "list_tokens",
+  "data": {
+    "tokens": [
+      {
+        "tokenId": "...",
+        "tokenAddress": "0x...402",
+        "name": "Moon Cat",
+        "symbol": "MOON",
+        "price": "0.0000812",
+        "mcap": "81.20",
+        "graduationProgress": "0.15",
+        "status": "active",
+        "createdAt": "2024-01-04T..."
+      }
+    ],
+    "pagination": {
+      "page": 1,
+      "limit": 20,
+      "total": 156,
+      "totalPages": 8
+    }
+  }
+}
+```
+
+**Example usage:**
+
+Ask your AI:
+```
+"Show me the top 10 tokens by market cap"
+"List recently created tokens"
+"Get page 2 of tokens sorted by creation date"
+```
+
+---
+
+## Portfolio
+
+### check_balance
+
+Check wallet balance (ETH, USDC, and CAT).
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `privateKey` | string | No | Override private key for this call |
+
+**Cost:** Free
+
+**Returns:**
+
+```json
+{
+  "success": true,
+  "operation": "check_balance",
+  "data": {
+    "address": "0x...",
+    "network": "eip155:84532",
+    "balances": {
+      "eth": "0.005123",
+      "usdc": "10.50",
+      "cat": "0.00"
+    }
+  }
+}
+```
+
+**Example usage:**
+
+Ask your AI:
+```
+"Check my wallet balance"
+"What's my USDC balance?"
+"Do I have enough funds to trade?"
+```
+
+---
+
+## Chat & Social
+
+### chat_join
+
+Join a chat room (general or token-specific).
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `tokenIdentifier` | string | No | Token to join chat for (omit for general chat) |
+| `privateKey` | string | No | Override private key for this call |
+
+**Cost:** $0.01 USDC
+
+**Lease:** 10 minutes (renewable)
+
+**Returns:**
+
+```json
+{
+  "success": true,
+  "operation": "chat_join",
+  "data": {
+    "leaseId": "lease_...",
+    "tokenId": "...",
+    "tokenName": "Moon Cat",
+    "expiresAt": "2024-01-04T12:10:00Z",
+    "participantCount": 42
+  }
+}
+```
+
+**Example usage:**
+
+Ask your AI:
+```
+"Join the MOON token chat room"
+"Join general chat"
+"Enter the chat for token 0x...402"
+```
+
+<Note>
+Save the `leaseId` for subsequent chat operations (send message, renew lease, get messages).
+</Note>
+
+---
+
+### chat_send_message
+
+Send a message to the active chat.
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `message` | string | Yes | Message text to send |
+| `leaseId` | string | Yes | Lease ID from chat_join |
+| `privateKey` | string | No | Override private key for this call |
+
+**Cost:** $0.0001 USDC per message
+
+**Returns:**
+
+```json
+{
+  "success": true,
+  "operation": "chat_send_message",
+  "data": {
+    "messageId": "msg_...",
+    "message": "MOON to the moon!",
+    "sender": "0x...",
+    "timestamp": "2024-01-04T12:05:00Z",
+    "leaseExpiresAt": "2024-01-04T12:10:00Z"
+  }
+}
+```
+
+**Example usage:**
+
+Ask your AI:
+```
+"Send message 'Hello everyone!' to the chat"
+"Post 'MOON is looking bullish' in the chat"
+```
+
+---
+
+### chat_renew_lease
+
+Renew an expiring or expired chat lease.
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `leaseId` | string | No | Lease ID to renew (uses most recent if omitted) |
+| `privateKey` | string | No | Override private key for this call |
+
+**Cost:** $0.01 USDC
+
+**Returns:**
+
+```json
+{
+  "success": true,
+  "operation": "chat_renew_lease",
+  "data": {
+    "leaseId": "lease_...",
+    "expiresAt": "2024-01-04T12:20:00Z",
+    "renewed": true
+  }
+}
+```
+
+**Example usage:**
+
+Ask your AI:
+```
+"Renew my chat lease"
+"Extend my chat session"
+```
+
+---
+
+### chat_get_recent_messages
+
+Get recent messages from chat (polling mechanism).
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `leaseId` | string | Yes | Lease ID from chat_join |
+| `limit` | number | No | Number of messages (default: 50, max: 100) |
+| `privateKey` | string | No | Override private key for this call |
+
+**Cost:** Free (uses cached data)
+
+**Returns:**
+
+```json
+{
+  "success": true,
+  "operation": "chat_get_recent_messages",
+  "data": {
+    "messages": [
+      {
+        "messageId": "msg_...",
+        "sender": "0x...",
+        "message": "MOON to the moon!",
+        "timestamp": "2024-01-04T12:05:00Z",
+        "senderLabel": "0x1234...5678"
+      }
+    ],
+    "totalMessages": 156,
+    "leaseExpiresAt": "2024-01-04T12:10:00Z"
+  }
+}
+```
+
+**Example usage:**
+
+Ask your AI:
+```
+"Check for new messages in the chat"
+"Get the last 20 chat messages"
+"Show me recent chat activity"
+```
+
+---
+
+## System
+
+### health_check
+
+Check if the httpcat agent is running and healthy.
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `privateKey` | string | No | Override private key for this call |
+
+**Cost:** $0.0001 USDC
+
+**Returns:**
+
+```json
+{
+  "success": true,
+  "operation": "health_check",
+  "data": {
+    "status": "healthy",
+    "version": "1.0.0",
+    "network": "eip155:84532",
+    "agentUrl": "https://agent.402.cat",
+    "timestamp": "2024-01-04T12:00:00Z"
+  }
+}
+```
+
+**Example usage:**
+
+Ask your AI:
+```
+"Is httpcat working?"
+"Check httpcat agent status"
+"Verify connection to httpcat"
+```
+
+---
+
+## Error Handling
+
+All tools return structured errors when operations fail:
+
+```json
+{
+  "success": false,
+  "operation": "buy_token",
+  "error": {
+    "code": "INSUFFICIENT_FUNDS",
+    "message": "Insufficient USDC balance. Need 0.10, have 0.05",
+    "details": {
+      "required": "0.10",
+      "available": "0.05",
+      "shortfall": "0.05"
+    }
+  }
+}
+```
+
+### Common Error Codes
+
+| Code | Description | Recovery |
+|------|-------------|----------|
+| `INSUFFICIENT_FUNDS` | Not enough USDC or ETH | Add funds to wallet |
+| `TOKEN_NOT_FOUND` | Token doesn't exist | Check identifier |
+| `INVALID_AMOUNT` | Invalid buy/sell amount | Use valid amount |
+| `NETWORK_ERROR` | Network connection issue | Retry operation |
+| `PAYMENT_REQUIRED` | 402 payment needed | Ensure wallet has USDC |
+| `AUTHENTICATION_ERROR` | Invalid private key | Check private key |
+| `RATE_LIMIT` | Too many requests | Wait and retry |
+| `TOKEN_GRADUATED` | Token already graduated | Use DEX instead |
+| `CHAT_LEASE_EXPIRED` | Chat lease expired | Renew lease |
+
+## Tool Composition
+
+MCP tools can be composed for complex workflows:
+
+### Example: Create and Trade
+
+```
+User: "Create a token called Test (TST), then buy $0.10 worth"
+
+AI:
+1. Calls create_token(name="Test", symbol="TST")
+2. Gets tokenAddress from response
+3. Calls buy_token(identifier=tokenAddress, amount=0.10)
+4. Reports both results
+```
+
+### Example: Monitor and Trade
+
+```
+User: "Check MOON price every minute. If it drops below $0.00001, buy $0.20"
+
+AI:
+1. Calls token_info(identifier="MOON") repeatedly
+2. Checks price in response
+3. When price < 0.00001:
+   - Calls buy_token(identifier="MOON", amount=0.20)
+   - Reports purchase
+```
+
+### Example: Portfolio Analysis
+
+```
+User: "Show me all my positions and total P&L"
+
+AI:
+1. Calls check_balance() for wallet address
+2. Calls list_tokens() to get all tokens
+3. For each token, calls token_info() to check position
+4. Aggregates data and calculates total P&L
+```
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="Use Contract Addresses" icon="fingerprint">
+    Always use contract addresses (0x...402) for buy/sell operations to avoid ambiguity:
+
+    **Good:**
+    ```
+    buy_token(identifier="0x1234...402", amount=0.10)
+    ```
+
+    **Avoid:**
+    ```
+    buy_token(identifier="MOON", amount=0.10)  # May match wrong token
+    ```
+  </Accordion>
+
+  <Accordion title="Check Balance First" icon="wallet">
+    Before trading, check if wallet has sufficient funds:
+
+    ```
+    1. check_balance()
+    2. If balance.usdc > 0.10:
+       buy_token(identifier="MOON", amount=0.10)
+    ```
+  </Accordion>
+
+  <Accordion title="Handle Errors Gracefully" icon="triangle-exclamation">
+    Always check the `success` field and handle errors:
+
+    ```typescript
+    const result = await mcp.call('buy_token', {...});
+
+    if (!result.success) {
+      console.error(result.error.message);
+      // Take corrective action
+    }
+    ```
+  </Accordion>
+
+  <Accordion title="Respect Chat Leases" icon="clock">
+    Renew chat leases before they expire:
+
+    ```
+    1. chat_join() -> save leaseId and expiresAt
+    2. Set reminder for 9 minutes
+    3. Before expiry: chat_renew_lease(leaseId)
+    ```
+  </Accordion>
+
+  <Accordion title="Use Appropriate Networks" icon="network-wired">
+    - **Testnet** for development and testing
+    - **Mainnet** for production trading
+    - Never mix testnet and mainnet private keys
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card
+    title="MCP Setup"
+    icon="wrench"
+    href="/mcp/setup"
+  >
+    Configure MCP for your client
+  </Card>
+  <Card
+    title="CLI Commands"
+    icon="terminal"
+    href="/cli/commands"
+  >
+    Understand underlying commands
+  </Card>
+  <Card
+    title="API Reference"
+    icon="code"
+    href="/api-reference/overview"
+  >
+    Build custom integrations
+  </Card>
+  <Card
+    title="Examples"
+    icon="book"
+    href="/api-reference/examples/workflows"
+  >
+    See complete workflows
+  </Card>
+</CardGroup>
+
+<Tip>
+All MCP tools use the same underlying httpcat-cli commands and x402 protocol. You can use the CLI directly for the same operations if needed.
+</Tip>

@@ -1,0 +1,526 @@
+---
+title: "Configuration"
+description: "Advanced configuration for httpcat-cli"
+---
+
+## Configuration File
+
+httpcat-cli stores configuration at:
+
+```
+~/.config/httpcat/config.json
+```
+
+<Warning>
+This file contains your encrypted private key. Never commit it to version control or share it publicly.
+</Warning>
+
+## Configuration Structure
+
+```json
+{
+  "encryptedPrivateKey": "...",
+  "encryptedSeedPhrase": "...",
+  "password": "hashed_password",
+  "passwordTimeoutMinutes": 15,
+  "accounts": [
+    {
+      "index": 0,
+      "type": "custom",
+      "address": "0x...",
+      "label": "Main Account"
+    },
+    {
+      "index": 1,
+      "type": "seed",
+      "address": "0x..."
+    }
+  ],
+  "activeAccountIndex": 0,
+  "network": "eip155:84532",
+  "agentUrl": "https://agent.402.cat",
+  "environment": "sepolia",
+  "environments": {
+    "local": {
+      "agentUrl": "http://localhost:8787",
+      "network": "eip155:84532"
+    },
+    "sepolia": {
+      "agentUrl": "https://agent.402.cat",
+      "network": "eip155:84532"
+    },
+    "base": {
+      "agentUrl": "https://agent.402.cat",
+      "network": "eip155:8453"
+    }
+  },
+  "preferences": {
+    "enableAsciiArt": true,
+    "colorOutput": true,
+    "verboseLogging": false
+  },
+  "aiAgent": {
+    "provider": "openai",
+    "apiKey": "encrypted_key",
+    "model": "gpt-4"
+  }
+}
+```
+
+## Environment Variables
+
+Environment variables override config file settings.
+
+### Network & Connection
+
+```bash
+export HTTPCAT_PRIVATE_KEY="0x..."
+export HTTPCAT_AGENT_URL="https://agent.402.cat"
+export HTTPCAT_NETWORK="eip155:84532"
+export HTTPCAT_RPC_URL="https://sepolia.base.org"
+```
+
+### AI Agent
+
+```bash
+export HTTPCAT_AI_PROVIDER="openai"  # or "anthropic"
+export HTTPCAT_AI_API_KEY="sk-..."
+export HTTPCAT_AI_MODEL="gpt-4"      # or "claude-3-5-sonnet-20241022"
+```
+
+### Display Preferences
+
+```bash
+export HTTPCAT_NO_ASCII_ART="true"
+export HTTPCAT_NO_COLOR="true"
+export HTTPCAT_VERBOSE="true"
+```
+
+## Configuration Priority
+
+Settings are resolved in this order (highest to lowest):
+
+1. **Command-line flags** (highest priority)
+2. **Environment variables**
+3. **Config file** (lowest priority)
+
+**Example:**
+```bash
+# Config file has: network = "eip155:84532"
+# Environment has: HTTPCAT_NETWORK="eip155:8453"
+# Command flag: --network eip155:84532
+
+# Result: Uses eip155:84532 (command flag wins)
+httpcat --network eip155:84532 balance
+```
+
+## Setup Wizard
+
+Run the interactive setup wizard:
+
+```bash
+httpcat config
+```
+
+The wizard will prompt you for:
+
+### 1. Wallet Setup
+
+Choose one:
+- **Import existing seed phrase** (BIP-39 12/24 words)
+- **Generate new seed phrase**
+- **Import via private key**
+
+<Tip>
+Seed phrases enable multi-account HD wallet (BIP-32). Private keys create a single account.
+</Tip>
+
+### 2. Password Protection (Optional)
+
+Set a password to encrypt your private key:
+- Default timeout: 15 minutes
+- Configurable timeout period
+- Auto-lock after timeout
+
+**Skip password** for headless/automation scenarios.
+
+### 3. Network Selection
+
+Choose your network:
+- **Base Sepolia** (`eip155:84532`) - Testnet
+- **Base** (`eip155:8453`) - Mainnet
+
+### 4. Agent URL
+
+Default: `https://agent.402.cat`
+
+Custom URLs supported for local development or alternative deployments.
+
+### 5. Preferences
+
+- **ASCII Art**: Enable/disable cat animations
+- **Color Output**: Enable/disable colored terminal output
+- **Verbose Logging**: Enable detailed logging
+
+## Account Management
+
+### Multi-Account Setup
+
+httpcat-cli supports multiple accounts from a single seed phrase:
+
+- **Account 0** (Custom): Your imported private key
+- **Account 1+** (Seed-Derived): HD wallet accounts (BIP-32 path: `m/44'/60'/0'/0/n`)
+
+**Add new account:**
+```bash
+httpcat account add
+```
+
+**Switch accounts:**
+```bash
+httpcat account switch 1
+```
+
+**List accounts:**
+```bash
+httpcat account list
+```
+
+**Use specific account for a command:**
+```bash
+httpcat -a 1 buy MTK 0.10
+httpcat --account 2 positions
+```
+
+### Account Types
+
+| Type | Source | Derivation | Use Case |
+|------|--------|------------|----------|
+| Custom | Private Key | Single account | Main trading account |
+| Seed | HD Wallet | BIP-32 `m/44'/60'/0'/0/n` | Multiple accounts from one seed |
+
+## Environment Management
+
+Switch between different deployment environments.
+
+### Pre-configured Environments
+
+| Name | Network | Agent URL | Use Case |
+|------|---------|-----------|----------|
+| `local` | Base Sepolia | `http://localhost:8787` | Local development |
+| `sepolia` | Base Sepolia | `https://agent.402.cat` | Testnet trading |
+| `base` | Base | `https://agent.402.cat` | Mainnet trading |
+
+### Commands
+
+```bash
+# List environments
+httpcat env list
+
+# Switch environment
+httpcat env use sepolia
+
+# Show current
+httpcat env show
+
+# Add custom environment
+httpcat env add staging https://staging.402.cat
+
+# Update environment
+httpcat env update local http://localhost:3000
+```
+
+### Custom Environment
+
+Create custom environments for staging, private deployments, etc.:
+
+```bash
+httpcat env add production https://my-agent.example.com
+
+# Use it
+httpcat env use production
+httpcat balance
+```
+
+## Advanced Configuration
+
+### Manual Config Editing
+
+Edit config file directly:
+
+```bash
+# macOS/Linux
+nano ~/.config/httpcat/config.json
+
+# Show config path
+httpcat config --show
+```
+
+### Reset Configuration
+
+Remove all settings and start fresh:
+
+```bash
+httpcat config --reset
+```
+
+This will:
+1. Delete `~/.config/httpcat/config.json`
+2. Restart the setup wizard
+
+### Headless/Automation Setup
+
+For CI/CD, automation, or scripts:
+
+```bash
+# Option 1: Environment variables (recommended)
+export HTTPCAT_PRIVATE_KEY="0x..."
+export HTTPCAT_NETWORK="eip155:84532"
+export HTTPCAT_AGENT_URL="https://agent.402.cat"
+
+httpcat --json create "Token" "TKN"
+
+# Option 2: Command-line flags
+httpcat --private-key 0x... --json create "Token" "TKN"
+
+# Option 3: Pre-configured file
+# Copy config.json to CI/CD secrets, then:
+mkdir -p ~/.config/httpcat
+echo "$HTTPCAT_CONFIG" > ~/.config/httpcat/config.json
+```
+
+<Warning>
+In CI/CD, always use secrets management for private keys. Never hardcode them in scripts or commit them to version control.
+</Warning>
+
+### Password Management
+
+Configure password behavior:
+
+```json
+{
+  "password": "hashed_password",
+  "passwordTimeoutMinutes": 15
+}
+```
+
+**Timeout options:**
+- `15` - Default, locks after 15 minutes
+- `0` - Never lock (not recommended for security)
+- Any number - Custom timeout in minutes
+
+**Remove password:**
+```bash
+# Reset config and skip password setup
+httpcat config --reset
+```
+
+## AI Agent Configuration
+
+Configure AI assistant for natural language commands:
+
+### OpenAI Setup
+
+```bash
+httpcat agent --setup
+
+# Or via environment
+export HTTPCAT_AI_PROVIDER="openai"
+export HTTPCAT_AI_API_KEY="sk-..."
+export HTTPCAT_AI_MODEL="gpt-4"
+```
+
+**Models:**
+- `gpt-4` (recommended)
+- `gpt-4-turbo`
+- `gpt-3.5-turbo`
+
+### Anthropic Setup
+
+```bash
+export HTTPCAT_AI_PROVIDER="anthropic"
+export HTTPCAT_AI_API_KEY="sk-ant-..."
+export HTTPCAT_AI_MODEL="claude-3-5-sonnet-20241022"
+```
+
+**Models:**
+- `claude-3-5-sonnet-20241022` (recommended)
+- `claude-3-opus-20240229`
+
+## Security Best Practices
+
+<AccordionGroup>
+  <Accordion title="Private Key Security" icon="key">
+    - Never commit `config.json` to version control
+    - Add `~/.config/httpcat` to `.gitignore`
+    - Use password protection for encrypted storage
+    - Use environment variables in CI/CD (secrets management)
+    - Rotate keys regularly
+    - Use separate keys for testnet and mainnet
+  </Accordion>
+
+  <Accordion title="File Permissions" icon="lock">
+    Ensure config file has restrictive permissions:
+
+    ```bash
+    chmod 600 ~/.config/httpcat/config.json
+    ```
+
+    Only you (file owner) can read/write.
+  </Accordion>
+
+  <Accordion title="Network Selection" icon="network-wired">
+    - Use testnet (Base Sepolia) for testing
+    - Double-check network before creating tokens
+    - Verify agent URL matches your network
+    - Mainnet transactions use real USDC
+  </Accordion>
+
+  <Accordion title="Backup & Recovery" icon="floppy-disk">
+    **Back up:**
+    - Seed phrase (write down, store securely)
+    - Private keys (encrypted backup)
+    - Config file (for preferences only, not keys)
+
+    **Recovery:**
+    - Restore seed phrase via `httpcat config --reset`
+    - Import private key
+    - Recreate preferences manually
+  </Accordion>
+</AccordionGroup>
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Config file not found" icon="file">
+    Run the setup wizard:
+    ```bash
+    httpcat config
+    ```
+
+    Or create manually:
+    ```bash
+    mkdir -p ~/.config/httpcat
+    httpcat config
+    ```
+  </Accordion>
+
+  <Accordion title="Permission denied errors" icon="ban">
+    Fix file permissions:
+    ```bash
+    chmod 600 ~/.config/httpcat/config.json
+    chmod 700 ~/.config/httpcat
+    ```
+  </Accordion>
+
+  <Accordion title="Environment not switching" icon="arrows-rotate">
+    Check current environment:
+    ```bash
+    httpcat env show
+    ```
+
+    Force switch:
+    ```bash
+    httpcat env use sepolia
+    httpcat balance  # Verify it worked
+    ```
+
+    If issues persist, check environment variables:
+    ```bash
+    env | grep HTTPCAT
+    ```
+  </Accordion>
+
+  <Accordion title="Password/unlock issues" icon="unlock">
+    If locked out:
+
+    **Option 1**: Wait for timeout to expire
+
+    **Option 2**: Reset config (loses preferences but keeps keys):
+    ```bash
+    httpcat config --reset
+    ```
+
+    **Option 3**: Remove password from config file manually (not recommended)
+  </Accordion>
+</AccordionGroup>
+
+## Configuration Examples
+
+### Local Development
+
+```json
+{
+  "network": "eip155:84532",
+  "agentUrl": "http://localhost:8787",
+  "environment": "local",
+  "preferences": {
+    "enableAsciiArt": false,
+    "verboseLogging": true
+  }
+}
+```
+
+### Production Trading
+
+```json
+{
+  "network": "eip155:8453",
+  "agentUrl": "https://agent.402.cat",
+  "environment": "base",
+  "password": "hashed_password",
+  "passwordTimeoutMinutes": 5,
+  "preferences": {
+    "enableAsciiArt": true,
+    "colorOutput": true
+  }
+}
+```
+
+### CI/CD Environment
+
+```bash
+#!/bin/bash
+
+export HTTPCAT_PRIVATE_KEY="$CI_PRIVATE_KEY"
+export HTTPCAT_NETWORK="eip155:84532"
+export HTTPCAT_AGENT_URL="https://agent.402.cat"
+export HTTPCAT_NO_ASCII_ART="true"
+
+# Run commands
+httpcat --json create "CI Token" "CI"
+httpcat --json buy CI 0.10
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card
+    title="Commands Reference"
+    icon="terminal"
+    href="/cli/commands"
+  >
+    Learn all available commands
+  </Card>
+  <Card
+    title="MCP Server"
+    icon="robot"
+    href="/mcp/overview"
+  >
+    Use with AI assistants
+  </Card>
+  <Card
+    title="x402 Protocol"
+    icon="money-bill-wave"
+    href="/concepts/x402-protocol"
+  >
+    Understand micropayments
+  </Card>
+  <Card
+    title="API Reference"
+    icon="code"
+    href="/api-reference/overview"
+  >
+    Build custom applications
+  </Card>
+</CardGroup>

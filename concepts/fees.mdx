@@ -1,0 +1,345 @@
+---
+title: "Fee Structure"
+description: "Understanding all fees in the 402.cat ecosystem"
+---
+
+## Overview
+
+402.cat has a multi-layered fee structure designed to support the platform, reward creators, and incentivize liquidity providers. All fees are transparent and predictable.
+
+## x402 Micropayment Fees
+
+Every API endpoint has a micropayment cost in USDC:
+
+| Operation | Cost | Purpose |
+|-----------|------|---------|
+| Create Token | $0.01 | Prevent spam, fund platform |
+| Buy Token (testnet) | $0.05 / $0.10 / $0.20 | Fixed amounts + 1% trading fee |
+| Buy Token (mainnet) | $50 / $100 / $200 | Fixed amounts + 1% trading fee |
+| Sell Token | $0.01 | Execution cost + 1% trading fee |
+| Token Info | $0.0001 | API access, very minimal |
+| List Tokens | $0.0001 | API access, very minimal |
+| Positions | $0.01 | Aggregated data |
+| Chat Join | $0.01 | 10-minute lease |
+| Chat Message | $0.0001 | Per message |
+| Chat Renew Lease | $0.01 | Extend 10 minutes |
+| Health Check | $0.0001 | Status check |
+| Universal Swap | $0.10 | DEX aggregation |
+| Shielded Swap | $1.00 | MEV protection (private mempool) |
+
+<Note>
+x402 fees are separate from trading fees. They cover API usage and platform operations.
+</Note>
+
+## Trading Fees
+
+### Bonding Curve Phase
+
+**Buy Fee: 1%** (100 basis points)
+- Added to your payment
+- Example: Buy $0.10 → Pay $0.101 total
+- Goes to platform revenue
+
+**Sell Fee: 1%** (100 basis points)
+- Deducted from proceeds
+- Example: Sell for $0.10 → Receive $0.099
+- Goes to platform revenue
+
+**Fee Calculation:**
+```
+buy_fee = usdc_amount × 100 / 10000
+sell_fee = usdc_received × 100 / 10000
+```
+
+### Post-Graduation (Uniswap V4)
+
+**Hook Fee: ~0.3%** (30 basis points)
+- Applied on every swap via Cat402Hook
+- Dynamic fee flag allows adjustment
+- Distributed 3 ways (see below)
+
+## Fee Distribution
+
+### Bonding Curve Phase
+
+<CardGroup cols={2}>
+  <Card title="Platform" icon="building">
+    **100%** of trading fees go to the platform during bonding curve phase
+
+    Used for:
+    - Platform operations
+    - Development
+    - Marketing
+    - Liquidity for graduated tokens
+  </Card>
+</CardGroup>
+
+### Post-Graduation Phase
+
+<CardGroup cols={3}>
+  <Card title="Creator" icon="user">
+    **33%** of hook fees
+
+    Rewards token creators for successful graduation and building community
+  </Card>
+  <Card title="Platform" icon="building">
+    **33%** of hook fees
+
+    Sustains platform operations and development
+  </Card>
+  <Card title="LP Holders" icon="users">
+    **33%** of hook fees
+
+    Rewards liquidity providers for market-making
+  </Card>
+</CardGroup>
+
+**Example:**
+- Swap generates $0.30 in fees
+- Creator: $0.10
+- Platform: $0.10
+- LPs: $0.10
+
+## Referral Fees
+
+### Referral Program
+
+Earn **10% of ALL fees** by referring users via the `X-402-Referrer` header.
+
+**How It Works:**
+
+1. **Set Referrer Header**: Add your wallet address to API requests
+   ```bash
+   curl -H "X-402-Referrer: 0x..." https://agent.402.cat/tokens
+   ```
+
+2. **User Pays Fees**: When referred user trades, fees are generated
+
+3. **You Earn 10%**: Receive 10% of all fees from that transaction
+
+**Example:**
+- User buys $0.20 worth of tokens
+- Trading fee: $0.002 (1%)
+- x402 fee: $0.20 (buy endpoint)
+- Total fees: $0.202
+- Your referral cut: $0.0202 (10%)
+
+### Claiming Referral Fees
+
+**Via CLI:**
+```bash
+# View claimable fees
+httpcat config --show  # Shows your address
+
+# Claim fees (if you're a referrer)
+httpcat claim --execute
+```
+
+**Via API:**
+```bash
+POST /entrypoints/view_fees/invoke
+{
+  "address": "0x..."  # Your referrer address
+}
+
+POST /entrypoints/claim_fees/invoke
+{
+  "address": "0x..."
+}
+```
+
+<Tip>
+Referral fees are claimable once they reach a minimum threshold (usually $1 USDC).
+</Tip>
+
+## LP Fees (Post-Graduation)
+
+### Creator Fees
+
+Token creators receive:
+- **20% of LP position** (unlocked)
+- **33% of hook fees** from all trades
+- **Compounding**: Fees can be reinvested
+
+**Claiming:**
+```bash
+# View claimable LP fees
+httpcat claim TOKEN_SYMBOL
+
+# Claim fees
+httpcat claim TOKEN_SYMBOL --execute
+```
+
+### LP Holder Fees
+
+Regular LPs (after adding liquidity) earn:
+- **33% of hook fees** proportional to position size
+- **Automatic accrual** in Uniswap V4 position
+- **Claimable** via Uniswap V4 interface
+
+## Gas Fees
+
+### Base Network Fees
+
+All transactions require ETH for gas:
+
+**Typical Costs (Base L2):**
+| Operation | Gas Cost |
+|-----------|----------|
+| Create Token | ~$0.01-0.05 |
+| Buy/Sell on Curve | ~$0.005-0.02 |
+| Swap on V4 | ~$0.01-0.03 |
+| Claim Fees | ~$0.01-0.02 |
+| Chat Message | ~$0.002-0.005 |
+
+<Note>
+Base is an L2, so gas fees are very low compared to Ethereum mainnet.
+</Note>
+
+## Fee Comparison
+
+### Total Cost Breakdown
+
+**Creating a Token:**
+```
+x402 fee: $0.01
+Gas fee: ~$0.02
+Total: ~$0.03
+```
+
+**Buying $0.20 (testnet):**
+```
+Token amount: $0.20
+Trading fee (1%): $0.002
+x402 fee: $0.20 (endpoint cost)
+Gas fee: ~$0.01
+Total: ~$0.412
+```
+
+**Selling 50% position:**
+```
+Proceeds: $0.10
+Trading fee (1%): $0.001 (deducted)
+x402 fee: $0.01
+Gas fee: ~$0.01
+Net received: ~$0.079
+```
+
+### Post-Graduation Trading
+
+**Swap on Uniswap V4:**
+```
+Token amount: $100
+Hook fee (0.3%): $0.30
+  - Creator: $0.10
+  - Platform: $0.10
+  - LPs: $0.10
+Gas fee: ~$0.02
+Total cost: ~$100.32
+```
+
+## Fee Optimization Tips
+
+<AccordionGroup>
+  <Accordion title="Batch Operations" icon="layer-group">
+    - Buy/sell in larger amounts to reduce relative x402 cost
+    - Example: One $0.20 buy vs four $0.05 buys saves 3× x402 fees
+  </Accordion>
+
+  <Accordion title="Use Referrals" icon="share-nodes">
+    - Always include `X-402-Referrer` header when building integrations
+    - Earn 10% back on all referred user fees
+    - Compounds quickly with volume
+  </Accordion>
+
+  <Accordion title="Timing Matters" icon="clock">
+    - Trade during low network congestion for lower gas
+    - Base gas fees are generally stable and low
+    - Use `--gas-price` flag to set custom gas price
+  </Accordion>
+
+  <Accordion title="Post-Graduation Strategy" icon="graduation-cap">
+    - Wait for graduation if planning large trades
+    - V4 has deeper liquidity for better prices
+    - Hook fees (0.3%) < bonding curve fees (1%) on large amounts
+  </Accordion>
+</AccordionGroup>
+
+## Fee Transparency
+
+### On-Chain Verification
+
+All fees are verifiable on-chain:
+
+**Bonding Curve:**
+- Check transaction logs for fee amounts
+- Verify via Base block explorer
+
+**Uniswap V4:**
+- Hook fees visible in swap events
+- LP fee claims verifiable on-chain
+
+### API Transparency
+
+All endpoints return fee breakdowns:
+
+```json
+{
+  "data": {
+    "usdcSpent": "0.10",
+    "fee": "0.001",
+    "tokensReceived": "1234.567",
+    "x402Fee": "0.20"
+  }
+}
+```
+
+## Fee Roadmap
+
+### Future Enhancements
+
+- **Tiered Fees**: Lower fees for high-volume traders
+- **Fee Tokens**: Pay fees in CAT (platform token) for discounts
+- **LP Incentives**: Additional rewards for early LPs
+- **Dynamic Hook Fees**: Adjust based on volatility
+
+<Note>
+All fee changes will be announced in advance and require community discussion.
+</Note>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card
+    title="x402 Protocol"
+    icon="money-bill-wave"
+    href="/concepts/x402-protocol"
+  >
+    Learn about micropayment protocol
+  </Card>
+  <Card
+    title="Bonding Curve"
+    icon="chart-area"
+    href="/concepts/bonding-curve"
+  >
+    Understand trading mechanics
+  </Card>
+  <Card
+    title="Claim Fees"
+    icon="hand-holding-dollar"
+    href="/api-reference/fees/claim"
+  >
+    API for claiming LP and referral fees
+  </Card>
+  <Card
+    title="API Reference"
+    icon="code"
+    href="/api-reference/overview"
+  >
+    Complete API documentation
+  </Card>
+</CardGroup>
+
+<Tip>
+All fees are designed to align incentives: creators are rewarded for success, platform is sustainable, and LPs are compensated for providing liquidity.
+</Tip>

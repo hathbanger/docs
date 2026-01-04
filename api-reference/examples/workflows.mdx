@@ -1,0 +1,68 @@
+---
+title: "Complete Workflows"
+description: "End-to-end examples of common operations"
+---
+
+## Create and Trade Token
+
+```bash
+# 1. Create token
+httpcat create "Moon Cat" "MOON" --website https://mooncat.io
+
+# Returns: Token address 0x...402
+
+# 2. Buy tokens
+httpcat buy 0x...402 0.20
+
+# 3. Check position
+httpcat info 0x...402
+
+# 4. Sell when profitable
+httpcat sell 0x...402 50%
+```
+
+## Monitor and Auto-Trade
+
+```bash
+#!/bin/bash
+while true; do
+  PRICE=$(httpcat --json info MOON | jq -r '.data.price')
+
+  if (( $(echo "$PRICE < 0.00001" | bc -l) )); then
+    httpcat buy MOON 0.10
+  fi
+
+  sleep 60
+done
+```
+
+## Multi-Account Trading
+
+```bash
+# Setup accounts
+httpcat account add  # Account 1
+httpcat account add  # Account 2
+
+# Trade with different accounts
+httpcat -a 0 buy MTK 0.10
+httpcat -a 1 buy MTK 0.10
+httpcat -a 2 buy MTK 0.10
+```
+
+## API Integration
+
+```python
+import requests
+
+def trade_token(token, amount):
+    response = requests.post(
+        'https://agent.402.cat/entrypoints/token_buy_0_10/invoke',
+        json={'identifier': token, 'amount': amount},
+        headers={'X-402-Referrer': '0xYourAddress'}
+    )
+    return response.json()
+```
+
+<Card title="More Examples" icon="code" href="/api-reference/examples/referrals">
+  See referral and chat bot examples
+</Card>

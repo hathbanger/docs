@@ -1,0 +1,683 @@
+---
+title: "Commands Reference"
+description: "Complete reference for all httpcat-cli commands"
+---
+
+## Overview
+
+httpcat-cli provides 18+ commands for token operations, trading, and portfolio management. All commands support `--json` for automation and `--help` for detailed information.
+
+## Global Flags
+
+Available with any command:
+
+| Flag | Description |
+|------|-------------|
+| `-j, --json` | Output JSON for scripting/automation |
+| `-q, --quiet` | Minimal output (exit codes only) |
+| `-v, --verbose` | Verbose error messages |
+| `--no-art` | Disable ASCII art |
+| `-k, --private-key <key>` | Use specific private key |
+| `-a, --account <index>` | Use specific account index |
+
+## Token Operations
+
+### create
+
+Create a new token on the bonding curve.
+
+```bash
+httpcat create "Moon Cat" "MOON"
+```
+
+**Usage:**
+```bash
+httpcat create <name> <symbol> [options]
+```
+
+**Options:**
+- `--photo <url|path>` - Token photo (URL, file path, or base64)
+- `--banner <url>` - Banner image URL
+- `--website <url>` - Website URL
+
+**Cost:** $0.01 USDC
+
+**Examples:**
+```bash
+httpcat create "My Token" "MTK" --website https://mytoken.io
+httpcat create "Cat Token" "CAT" --photo ./logo.png
+```
+
+<Note>
+Token addresses end in `402` for easy identification. Save the address for trading!
+</Note>
+
+---
+
+### buy
+
+Buy tokens from the bonding curve.
+
+```bash
+httpcat buy 0x1234...402 0.10
+```
+
+**Usage:**
+```bash
+httpcat buy <identifier> <amount> [options]
+```
+
+**Identifier formats:**
+- Contract address: `0x1234...402` (recommended, unique)
+- Token ID (UUID): `abc123-4567-...`
+- Token name: `"My Token"` (use quotes if spaces)
+- Token symbol: `MTK`
+
+**Amount:**
+- **Testnet**: `0.05`, `0.10`, `0.20` USDC
+- **Mainnet**: `50`, `100`, `200` USDC
+- **Percentage**: `10%`, `50%`, `100%` (of USDC balance)
+
+**Options:**
+- `-r, --repeat <count>` - Execute multiple buys
+- `-d, --delay <ms>` - Delay between repeat operations
+
+**Cost:** Amount + 1% fee
+
+**Examples:**
+```bash
+# Buy using contract address (recommended)
+httpcat buy 0x1234567890123456789012345678901234567402 0.20
+
+# Buy using symbol
+httpcat buy MTK 0.10
+
+# Buy 10 times with 500ms delay
+httpcat buy MOON 0.10 -r 10 -d 500
+
+# Buy with 50% of your USDC balance
+httpcat buy MTK 50%
+```
+
+<Tip>
+Use contract addresses for unambiguous identification. If multiple tokens share the same name/symbol, the system selects the one with highest graduation progress.
+</Tip>
+
+---
+
+### sell
+
+Sell tokens back to the bonding curve.
+
+```bash
+httpcat sell 0x1234...402 50%
+```
+
+**Usage:**
+```bash
+httpcat sell <identifier> <amount|%|all>
+```
+
+**Amount:**
+- Number of tokens: `1000`
+- Percentage: `50%`, `25%`, `100%`
+- All tokens: `all`
+
+**Cost:** 1% fee deducted from proceeds
+
+**Examples:**
+```bash
+# Sell 50% of position
+httpcat sell 0x1234...402 50%
+
+# Sell all tokens
+httpcat sell MTK all
+
+# Sell specific amount
+httpcat sell "Moon Token" 1000
+```
+
+---
+
+### info
+
+Get detailed information about a token.
+
+```bash
+httpcat info 0x1234...402
+```
+
+**Usage:**
+```bash
+httpcat info <identifier>
+```
+
+**Cost:** $0.0001 USDC
+
+**Returns:**
+- Token address and details (name, symbol, creator)
+- Current price and market cap
+- Graduation progress
+- Your position (tokens owned, P&L, ROI)
+- Bonding curve state
+
+**Example:**
+```bash
+httpcat info MOON
+httpcat info "Moon Cat"
+httpcat info 0x1234...402
+```
+
+---
+
+### list
+
+List all tokens with pagination and sorting.
+
+```bash
+httpcat list --sort mcap --limit 10
+```
+
+**Usage:**
+```bash
+httpcat list [options]
+```
+
+**Options:**
+- `-s, --sort <field>` - Sort by: `mcap`, `created`, `name`
+- `-l, --limit <n>` - Items per page (default: 20, max: 100)
+- `-p, --page <n>` - Page number
+
+**Cost:** $0.0001 USDC
+
+**Examples:**
+```bash
+# Top 10 tokens by market cap
+httpcat list --sort mcap --limit 10
+
+# Recently created tokens
+httpcat list --sort created --limit 20
+
+# Second page
+httpcat list --page 2
+```
+
+<Note>
+Contract addresses are displayed prominently for easy copying.
+</Note>
+
+---
+
+### swap
+
+Swap any ERC20 token via DEX aggregation (CLI only, not available in interactive shell).
+
+```bash
+httpcat swap 0x036c... 0x4200... 1000000 --slippage 100
+```
+
+**Usage:**
+```bash
+httpcat swap <tokenIn> <tokenOut> <amount> [options]
+```
+
+**Options:**
+- `-s, --slippage <bps>` - Slippage tolerance in basis points (default: 50 = 0.5%)
+
+**Cost:** $0.10 USDC
+
+**Example:**
+```bash
+httpcat swap 0x036CbD53842c5426634e7929541eC2318f3dCF7e 0x4200000000000000000000000000000000000006 1000000 --slippage 100
+```
+
+---
+
+### claim
+
+View or claim LP fees for graduated tokens.
+
+```bash
+httpcat claim MTK --execute
+```
+
+**Usage:**
+```bash
+httpcat claim <identifier> [options]
+```
+
+**Options:**
+- `-e, --execute` - Execute claim (default: view only)
+- `-A, --address <address>` - Caller address
+
+**Cost:** Free to view, gas fees for claiming
+
+**Examples:**
+```bash
+# View claimable fees
+httpcat claim MTK
+
+# Claim fees
+httpcat claim 0x1234...402 --execute
+```
+
+## Portfolio
+
+### positions
+
+Get all your positions with comprehensive information.
+
+```bash
+httpcat positions
+```
+
+**Usage:**
+```bash
+httpcat positions [options]
+```
+
+**Options:**
+- `-a, --active` - Show only active positions
+- `-g, --graduated` - Show only graduated positions
+
+**Cost:** $0.01 USDC
+
+**Returns:**
+- Position details for each token
+- Profit/Loss (P&L)
+- Return on Investment (ROI)
+- Transaction history
+- Portfolio summary
+
+**Example:**
+```bash
+# All positions
+httpcat positions
+
+# Only active (on bonding curve)
+httpcat positions --active
+
+# Only graduated (on Uniswap)
+httpcat positions --graduated
+```
+
+---
+
+### transactions
+
+Get transaction history with filtering.
+
+```bash
+httpcat transactions --type buy --limit 20
+```
+
+**Usage:**
+```bash
+httpcat transactions [options]
+```
+
+**Options:**
+- `-u, --user <address>` - Filter by user (defaults to active account)
+- `-t, --token <tokenId>` - Filter by token
+- `-T, --type <type>` - Filter by type: `buy`, `sell`, `airdrop`
+- `-l, --limit <n>` - Results limit (default: 50, max: 100)
+- `-o, --offset <n>` - Pagination offset
+
+**Examples:**
+```bash
+# Recent buys
+httpcat transactions --type buy --limit 20
+
+# Transactions for specific token
+httpcat transactions --token 0x1234...402
+
+# All transactions with pagination
+httpcat transactions --limit 100 --offset 100
+```
+
+---
+
+### balance
+
+Check wallet balances (ETH, USDC, CAT).
+
+```bash
+httpcat balance
+```
+
+**Usage:**
+```bash
+httpcat balance
+```
+
+**Cost:** Free
+
+**Returns:**
+- ETH balance (for gas fees)
+- USDC balance (for trading)
+- CAT balance (platform token, if graduated)
+
+## Account Management
+
+### account
+
+Display and manage accounts.
+
+```bash
+httpcat account list
+```
+
+**Subcommands:**
+- `account list` - List all accounts
+- `account switch <index>` - Switch active account
+- `account add` - Add new seed-derived account
+
+**Examples:**
+```bash
+# List all accounts
+httpcat account list
+
+# Switch to account 1
+httpcat account switch 1
+
+# Add new account
+httpcat account add
+```
+
+<Note>
+Account 0 is your imported private key. Accounts 1+ are derived from your seed phrase (HD wallet).
+</Note>
+
+---
+
+### env
+
+Manage environments (local, sepolia, base).
+
+```bash
+httpcat env use sepolia
+```
+
+**Subcommands:**
+- `env list` - List all environments
+- `env use <name>` - Switch environment
+- `env show` - Show current environment
+- `env add <name> <url>` - Add custom environment
+- `env update <name> <url>` - Update environment
+
+**Examples:**
+```bash
+# List environments
+httpcat env list
+
+# Switch to local development
+httpcat env use local
+
+# Switch to testnet
+httpcat env use sepolia
+
+# Switch to mainnet
+httpcat env use base
+
+# Add custom environment
+httpcat env add staging https://staging.402.cat
+
+# Show current environment
+httpcat env show
+```
+
+## AI & Social
+
+### agent / cat
+
+AI-powered assistant for natural language trading.
+
+```bash
+httpcat agent "Buy 100 MOON tokens"
+```
+
+**Usage:**
+```bash
+httpcat agent <query>
+httpcat cat <query>
+```
+
+**Options:**
+- `--chat` - Enter interactive chat mode
+- `--setup` - Configure API key/provider
+
+**Providers:**
+- OpenAI (GPT-4)
+- Anthropic (Claude)
+
+**Examples:**
+```bash
+# Natural language commands
+httpcat agent "Create a token called Purrfect with symbol PURR"
+httpcat cat "Buy $0.20 worth of MOON tokens"
+httpcat agent "Show me the top 10 tokens by market cap"
+
+# Setup API key
+httpcat agent --setup
+
+# Interactive chat
+httpcat agent --chat
+```
+
+---
+
+### chat
+
+Join streaming chat (general or token-specific).
+
+```bash
+httpcat chat MTK
+```
+
+**Usage:**
+```bash
+httpcat chat [token] [options]
+```
+
+**Options:**
+- `-f, --input-format <format>` - Input format: `text` or `stream-json`
+
+**Cost:** $0.01 to join, $0.0001 per message, 10-minute lease
+
+**In-chat commands:**
+- `/exit`, `/quit` - Leave chat
+- `/renew` - Renew 10-minute lease
+- `/buy <amount>` - Quick buy (token chats only)
+- `/sell <amount|%|all>` - Quick sell (token chats only)
+- `/help` - Show help
+
+**Examples:**
+```bash
+# Join general chat
+httpcat chat
+
+# Join token-specific chat
+httpcat chat MOON
+httpcat chat 0x1234...402
+
+# Structured JSON input
+httpcat chat MTK --input-format stream-json
+```
+
+## System
+
+### health
+
+Check if the httpcat agent is running.
+
+```bash
+httpcat health
+```
+
+**Usage:**
+```bash
+httpcat health
+```
+
+**Cost:** $0.0001 USDC
+
+**Returns:** Agent status, version, and network information
+
+---
+
+### config
+
+Manage configuration.
+
+```bash
+httpcat config --show
+```
+
+**Usage:**
+```bash
+httpcat config [options]
+```
+
+**Options:**
+- `-s, --show` - Show current config
+- `-S, --set <key=value>` - Set config value
+- `-r, --reset` - Reset and reconfigure
+
+**Examples:**
+```bash
+# Show configuration
+httpcat config --show
+
+# Reset configuration
+httpcat config --reset
+
+# Set specific value
+httpcat config --set enableAsciiArt=false
+```
+
+---
+
+### mcp-server
+
+Start Model Context Protocol server for AI assistant integration.
+
+```bash
+httpcat mcp-server
+```
+
+**Usage:**
+```bash
+httpcat mcp-server
+```
+
+Exposes all CLI commands as MCP tools for Cursor, Claude Desktop, and other MCP-compatible clients.
+
+See [MCP Server](/mcp/overview) documentation for integration guide.
+
+---
+
+### help
+
+Display help information.
+
+```bash
+httpcat help
+httpcat --help
+httpcat buy --help
+```
+
+## Interactive Mode
+
+Run `httpcat` without arguments to enter the interactive shell:
+
+```
+$ httpcat
+
+  /\_/\
+ ( ^.^ ) Welcome to httpcat!
+  > ^ <  Your agent for token operations
+
+🔗 Connected to: base-sepolia
+🌐 Agent: https://agent.402.cat
+
+httpcat> create "Meow Token" "MEOW"
+httpcat> buy MEOW 0.20
+httpcat> info MEOW
+httpcat> list --sort mcap
+```
+
+**Interactive Features:**
+- ASCII art cats for every action
+- Colored output and progress bars
+- Tab completion and history
+- Built-in help system
+- No need to type `httpcat` prefix
+
+## JSON Mode
+
+Add `--json` flag to any command for structured JSON output:
+
+```bash
+httpcat --json create "Test Token" "TEST"
+httpcat --json info MTK
+httpcat --json positions
+```
+
+**Output format:**
+```json
+{
+  "success": true,
+  "operation": "create_token",
+  "data": {
+    "tokenId": "abc123-...",
+    "tokenAddress": "0x1234...402",
+    "name": "Test Token",
+    "symbol": "TEST"
+  }
+}
+```
+
+**Exit Codes:**
+- `0` - Success
+- `1` - Error
+- `2` - Payment required
+- `3` - Authentication error
+
+Perfect for:
+- Shell scripts
+- CI/CD pipelines
+- Automation
+- LLM/agent integration
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card
+    title="Configuration"
+    icon="gear"
+    href="/cli/configuration"
+  >
+    Advanced configuration options
+  </Card>
+  <Card
+    title="MCP Server"
+    icon="robot"
+    href="/mcp/overview"
+  >
+    Use with AI assistants
+  </Card>
+  <Card
+    title="API Reference"
+    icon="code"
+    href="/api-reference/overview"
+  >
+    Build custom applications
+  </Card>
+  <Card
+    title="Examples"
+    icon="book"
+    href="/api-reference/examples/workflows"
+  >
+    Complete workflow examples
+  </Card>
+</CardGroup>

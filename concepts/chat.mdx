@@ -1,0 +1,545 @@
+---
+title: "Chat System"
+description: "Token-specific and general chat rooms on 402.cat"
+---
+
+## Overview
+
+402.cat includes a built-in chat system for community interaction. Each token has its own chat room, plus there's a general chat for platform-wide discussion.
+
+## How It Works
+
+Chat is **lease-based** with automatic cleanup:
+
+1. **Join**: Pay $0.01 for a 10-minute lease
+2. **Chat**: Send messages for $0.0001 each
+3. **Renew**: Extend lease for another $0.01
+4. **Expire**: Leave automatically after 10 minutes
+
+This prevents spam while keeping costs low for active participants.
+
+## Chat Types
+
+### Token-Specific Chat
+
+Every token has its own chat room:
+
+```bash
+# Join MOON token chat
+httpcat chat MOON
+httpcat chat 0x1234...402
+```
+
+**Use Cases:**
+- Discuss token performance
+- Coordinate trading
+- Share updates
+- Build community
+- Quick buy/sell via `/buy` and `/sell` commands
+
+**Participants:** Token holders and interested traders
+
+### General Chat
+
+Platform-wide discussion:
+
+```bash
+# Join general chat
+httpcat chat
+```
+
+**Use Cases:**
+- Platform announcements
+- General crypto discussion
+- Find new tokens
+- Network with other traders
+- Platform feedback
+
+**Participants:** All 402.cat users
+
+## Using Chat
+
+### Via CLI
+
+**Interactive Mode:**
+```bash
+# Join token chat
+httpcat chat MOON
+
+# You'll see:
+💬 Joined MOON chat (lease: 10 minutes)
+
+🐱 User123: MOON to the moon!
+🐱 Trader456: Just bought 0.20!
+
+> _
+
+# Type and press Enter to send
+> Hello everyone!
+
+# In-chat commands:
+> /buy 0.10        # Quick buy
+> /sell 50%        # Quick sell
+> /renew           # Extend lease
+> /exit            # Leave chat
+```
+
+**Non-Interactive:**
+```bash
+# Join
+httpcat chat MOON
+
+# Send message
+echo "Hello!" | httpcat chat MOON
+
+# Leave
+Ctrl+C
+```
+
+### Via API
+
+**Join Chat:**
+```bash
+POST /entrypoints/chat_join/invoke
+{
+  "tokenIdentifier": "MOON"  # Omit for general chat
+}
+
+# Returns:
+{
+  "leaseId": "lease_abc123",
+  "expiresAt": "2024-01-04T12:10:00Z"
+}
+```
+
+**Send Message:**
+```bash
+POST /entrypoints/chat_send_message/invoke
+{
+  "leaseId": "lease_abc123",
+  "message": "Hello everyone!"
+}
+```
+
+**Renew Lease:**
+```bash
+POST /entrypoints/chat_renew_lease/invoke
+{
+  "leaseId": "lease_abc123"
+}
+```
+
+**Get Messages:**
+```bash
+POST /entrypoints/chat_get_recent_messages/invoke
+{
+  "leaseId": "lease_abc123",
+  "limit": 50
+}
+```
+
+### Via MCP
+
+AI assistants can use chat tools:
+
+```
+You: "Join the MOON token chat room"
+AI: Uses chat_join tool → gets leaseId
+
+You: "Send a message saying 'Bullish on MOON!'"
+AI: Uses chat_send_message tool
+
+You: "What are people saying in the chat?"
+AI: Uses chat_get_recent_messages tool → summarizes
+```
+
+## In-Chat Commands
+
+Available in interactive CLI mode:
+
+| Command | Description | Cost |
+|---------|-------------|------|
+| `/buy <amount>` | Quick buy tokens | Amount + fees |
+| `/sell <amount>` | Quick sell tokens | Fees only |
+| `/renew` | Renew 10-minute lease | $0.01 |
+| `/exit` or `/quit` | Leave chat | Free |
+| `/help` | Show help | Free |
+
+**Example:**
+```
+🐱 You: The price is looking good!
+> /buy 0.10
+
+💰 Bought 1,234.56 MOON for $0.10
+
+🐱 You: Got some!
+```
+
+## Lease System
+
+### How Leases Work
+
+**Join** ($0.01):
+- Creates 10-minute lease
+- Returns `leaseId` and `expiresAt`
+- Can send messages while active
+
+**Send** ($0.0001 per message):
+- Must have active lease
+- Lease timer doesn't reset
+- Pay per message
+
+**Renew** ($0.01):
+- Extends lease by 10 minutes
+- Can renew before or after expiration
+- Same `leaseId` continues
+
+**Expire**:
+- Auto-removed after expiration
+- Can no longer send messages
+- Must rejoin to continue
+
+### Lease Timeline
+
+```
+0:00  - Join ($0.01) → Lease active until 0:10
+0:05  - Send message ($0.0001)
+0:09  - Renew ($0.01) → Lease extended until 0:19
+0:15  - Send message ($0.0001)
+0:19  - Lease expires → Must rejoin
+```
+
+### Why Leases?
+
+**Benefits:**
+- Prevents spam (must pay to join)
+- Keeps chat active (inactive users removed)
+- Low cost for active users ($0.01 per 10 min)
+- Automatic cleanup (no abandoned sessions)
+
+**Cost Example:**
+- 1 hour of active chatting
+- 6 lease renewals: $0.06
+- 100 messages: $0.01
+- **Total: $0.07 per hour**
+
+## WebSocket vs REST
+
+### WebSocket (Real-time)
+
+**Direct WebSocket connection:**
+```javascript
+const ws = new WebSocket('wss://agent.402.cat/chat/ws?token=MOON');
+
+ws.onmessage = (event) => {
+  const message = JSON.parse(event.data);
+  console.log(`${message.sender}: ${message.message}`);
+};
+
+ws.send(JSON.stringify({
+  type: 'message',
+  content: 'Hello!'
+}));
+```
+
+**Features:**
+- Instant message delivery
+- Server push notifications
+- Lower latency
+- Bidirectional communication
+
+### REST (Polling)
+
+**Poll for new messages:**
+```bash
+while true; do
+  POST /entrypoints/chat_get_recent_messages/invoke
+  sleep 1
+done
+```
+
+**Features:**
+- Simpler implementation
+- Works behind firewalls
+- No persistent connection
+- Higher latency (polling interval)
+
+**Choose:**
+- **WebSocket**: For real-time chat UI, live updates
+- **REST**: For bots, automation, simple scripts
+
+## Message Format
+
+### Incoming Messages
+
+```json
+{
+  "messageId": "msg_abc123",
+  "sender": "0x1234...5678",
+  "message": "MOON to the moon!",
+  "timestamp": "2024-01-04T12:05:30Z",
+  "senderLabel": "0x1234...5678",
+  "tokenId": "..."
+}
+```
+
+### Sending Messages
+
+Simple text only:
+```json
+{
+  "leaseId": "lease_abc123",
+  "message": "Your message here"
+}
+```
+
+**Max length:** 500 characters
+
+**Allowed:**
+- Text, numbers, symbols
+- Emojis
+- URLs (auto-linked in UI)
+
+**Not allowed:**
+- HTML/scripts (sanitized)
+- Images (URLs only)
+- Files
+
+## Moderation & Rules
+
+### Platform Rules
+
+1. **No Spam**: Excessive messages = ban
+2. **No Scams**: Phishing links = ban
+3. **Be Respectful**: Personal attacks = ban
+4. **No Market Manipulation**: Coordinated pumps = ban
+5. **Follow Laws**: Illegal activity = ban + report
+
+### Admin Actions
+
+Admins can:
+- **Broadcast**: Send platform announcements
+- **Mute**: Temporarily silence users
+- **Ban**: Permanently remove users
+- **Delete**: Remove specific messages
+- **Monitor**: View all chat activity
+
+## Chat Cleanup
+
+### Automatic Cleanup
+
+**Hourly Process:**
+- Remove expired leases
+- Delete old messages (retention period)
+- Free database space
+
+**Retention:**
+- Active leases: Indefinite
+- Expired leases: Removed after 1 hour
+- Messages: Kept for 24-48 hours
+- Admin broadcasts: Kept permanently
+
+## Security & Privacy
+
+<AccordionGroup>
+  <Accordion title="Message Privacy" icon="lock">
+    **Public by default:**
+    - All messages are public
+    - Visible to anyone with active lease
+    - Stored temporarily on server
+    - Not end-to-end encrypted
+
+    **Don't share:**
+    - Private keys
+    - Seed phrases
+    - Personal information
+    - Financial details
+  </Accordion>
+
+  <Accordion title="Sender Identity" icon="user">
+    **Wallet-based:**
+    - Sender is your wallet address
+    - Shortened display (0x1234...5678)
+    - Cannot impersonate others
+    - EIP-712 signature verification
+
+    **Pseudonymous:**
+    - Not linked to real identity
+    - Can use different wallets
+    - No email/phone required
+  </Accordion>
+
+  <Accordion title="Spam Protection" icon="shield">
+    **Pay-per-message:**
+    - $0.0001 per message
+    - Economic spam deterrent
+    - Rate limiting per wallet
+    - Lease-based access control
+
+    **Moderation:**
+    - Automated spam detection
+    - Community reporting
+    - Admin review and action
+  </Accordion>
+
+  <Accordion title="Data Storage" icon="database">
+    **Temporary:**
+    - Messages stored 24-48 hours
+    - Leases removed after expiry
+    - No permanent chat history
+    - Regular database cleanup
+
+    **Access:**
+    - Active lease holders only
+    - Cannot see messages before joining
+    - No message editing/deletion
+  </Accordion>
+</AccordionGroup>
+
+## Chat Bot Example
+
+Build a simple chat bot:
+
+```typescript
+import { x402Client } from '@402/client';
+
+class ChatBot {
+  private leaseId: string;
+
+  async join(tokenId: string) {
+    const response = await client.post('/entrypoints/chat_join/invoke', {
+      tokenIdentifier: tokenId
+    });
+    this.leaseId = response.data.leaseId;
+
+    // Auto-renew before expiry
+    setInterval(() => this.renew(), 9 * 60 * 1000);  // 9 minutes
+  }
+
+  async send(message: string) {
+    await client.post('/entrypoints/chat_send_message/invoke', {
+      leaseId: this.leaseId,
+      message
+    });
+  }
+
+  async listen() {
+    while (true) {
+      const messages = await client.post(
+        '/entrypoints/chat_get_recent_messages/invoke',
+        { leaseId: this.leaseId, limit: 10 }
+      );
+
+      for (const msg of messages.data.messages) {
+        // Respond to mentions
+        if (msg.message.includes('@bot')) {
+          await this.send(`Hi ${msg.senderLabel}!`);
+        }
+      }
+
+      await sleep(1000);  // Poll every second
+    }
+  }
+
+  async renew() {
+    await client.post('/entrypoints/chat_renew_lease/invoke', {
+      leaseId: this.leaseId
+    });
+  }
+}
+```
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="For Users" icon="user">
+    - Renew lease before expiry (9 min mark)
+    - Don't spam messages
+    - Be helpful to community
+    - Share insights, not financial advice
+    - Report suspicious activity
+  </Accordion>
+
+  <Accordion title="For Creators" icon="star">
+    - Engage with your community
+    - Answer questions promptly
+    - Share project updates
+    - Be transparent about plans
+    - Build trust through presence
+  </Accordion>
+
+  <Accordion title="For Bots" icon="robot">
+    - Auto-renew leases
+    - Rate limit yourself
+    - Provide useful information
+    - Don't spam promotions
+    - Respect community norms
+  </Accordion>
+
+  <Accordion title="For Safety" icon="shield-check">
+    - Never share private keys
+    - Verify information independently
+    - Don't trust strangers with money
+    - Report scams immediately
+    - Use common sense
+  </Accordion>
+</AccordionGroup>
+
+## Troubleshooting
+
+**Lease Expired:**
+- Rejoin the chat
+- Set reminders to renew
+- Use auto-renew in bots
+
+**Messages Not Sending:**
+- Check lease is active
+- Verify USDC balance
+- Check message length (<500 chars)
+
+**Can't See Messages:**
+- Ensure you're in the right chat
+- Check if lease is active
+- Try rejoining
+
+**WebSocket Disconnected:**
+- Automatic reconnection in most clients
+- Fallback to REST polling
+- Check network connection
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card
+    title="CLI Commands"
+    icon="terminal"
+    href="/cli/commands"
+  >
+    Learn chat commands
+  </Card>
+  <Card
+    title="MCP Tools"
+    icon="robot"
+    href="/mcp/tools"
+  >
+    Use chat with AI assistants
+  </Card>
+  <Card
+    title="API Reference"
+    icon="code"
+    href="/api-reference/chat/join"
+  >
+    Complete chat API docs
+  </Card>
+  <Card
+    title="Examples"
+    icon="book"
+    href="/api-reference/examples/chat-bots"
+  >
+    Build chat bots
+  </Card>
+</CardGroup>
+
+<Tip>
+Chat is where community happens! Active engagement in chat correlates strongly with token success.
+</Tip>
