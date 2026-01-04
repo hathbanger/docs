@@ -89,11 +89,6 @@
           "anchor": "x402 Protocol",
           "href": "https://x402.org",
           "icon": "link"
-        },
-        {
-          "anchor": "GitHub",
-          "href": "https://github.com",
-          "icon": "github"
         }
       ]
     }
@@ -111,9 +106,7 @@
    ]
   },
   "footer": {
-    "socials": {
-      "github": "https://github.com"
-    }
+    "socials": {}
   },
   "topbar": {
     "style": "default"
