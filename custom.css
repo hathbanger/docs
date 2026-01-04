@@ -1,13 +1,11 @@
 /* 402.cat Custom Styles - Minimal */
 
-/* Add ASCII cat before site name and apply monospace font to entire logo */
-nav a[href="/"],
-header a[href="/"] {
-  font-family: 'Courier New', Courier, monospace !important;
-}
-
-nav a[href="/"]::before,
-header a[href="/"]::before {
-  content: "/\\_/\\ ( ^.^ ) > ^ < ";
-  font-size: 0.9em;
+/* Force monospace font stack on the logo - matching httpkitty */
+[class*="logo"],
+[class*="Logo"],
+nav a,
+header a,
+a[href="/"] {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace !important;
+  font-weight: 700 !important;
 }

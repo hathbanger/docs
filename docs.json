@@ -2,9 +2,9 @@
   "$schema": "https://mintlify.com/docs.json",
   "theme": "maple",
   "name": "[~^._.^~] 402.cat",
-  "modeToggle": {
+  "appearance": {
     "default": "light",
-    "isHidden": true
+    "strict": false
   },
   "colors": {
     "primary": "#000000",
