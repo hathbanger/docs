@@ -1,2 +1,9 @@
 /* 402.cat Custom Styles - Minimal */
-/* Using default Mintlify styling */
+
+/* Add ASCII cat before site name */
+nav a[href="/"]::before,
+header a[href="/"]::before {
+  content: "[~^._.^~] ";
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 0.9em;
+}
