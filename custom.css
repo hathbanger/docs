@@ -1,8 +1,2 @@
 /* 402.cat Custom Styles - Minimal */
-
-/* ASCII cat header */
-nav a[href="/"]::after,
-header a[href="/"]::after {
-  content: " [~^._.^~]" !important;
-  font-family: 'Courier New', Courier, monospace !important;
-}
+/* Using default Mintlify styling */
