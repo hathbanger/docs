@@ -354,32 +354,86 @@ Minimum liquidity is guaranteed.
   </Accordion>
 </AccordionGroup>
 
-## Platform Token (CAT)
+## Platform Token (CAT) 🐱
 
-The first graduated token becomes the **platform token**:
+The first graduated token becomes the **platform token** - the heart of the 402.cat ecosystem.
+
+### Why CAT is Exciting 🚀
+
+**Every single graduation buys CAT!** This creates permanent, automatic buy pressure:
+
+1. **Automatic CAT Purchases**: Every token graduation converts ALL accumulated USDC into CAT
+2. **Permanent Demand**: More successful tokens = more CAT buys = more value accrual
+3. **Network Effects**: CAT becomes more liquid and valuable with each graduation
+4. **Ecosystem Hub**: All tokens pair with CAT, making it the central currency
+
+<Tip>
+**Key Insight**: When a token graduates with $69 in real USDC (testnet) or $69,000 (mainnet), **100% of that USDC is used to buy CAT from the market**. This creates massive buy pressure as the platform grows! 💰
+</Tip>
+
+### How CAT Buy Pressure Works
+
+Every graduation follows this flow:
+
+```mermaid
+graph LR
+    A[Token Graduates] --> B[Convert $69K USDC to CAT]
+    B --> C[Buy CAT from Market]
+    C --> D[Create Token/CAT Pool]
+    D --> E[CAT Price Increases]
+```
+
+**Example Graduation:**
+- Token reaches $69,000 market cap
+- Graduation triggers
+- **Platform buys ~$69,000 worth of CAT** from the CAT/USDC pool
+- Creates new Token/CAT liquidity pool
+- CAT holders benefit from buy pressure! 📈
 
 ### CAT Token Purpose
 
-1. **Pairing**: All tokens pair against CAT (not USDC)
-2. **Value Accrual**: More graduations = more CAT demand
-3. **Platform Revenue**: Fees generate CAT buy pressure
-4. **Network Effect**: CAT becomes the ecosystem currency
+1. **Universal Pairing**: All graduated tokens pair against CAT (not USDC)
+2. **Value Accrual**: Each graduation = automatic CAT market buy
+3. **Liquidity Hub**: CAT becomes the most liquid token on 402.cat
+4. **Platform Revenue**: Trading fees further increase CAT utility
+5. **Ecosystem Currency**: The foundation of all graduated token trading
 
-### CAT Graduation Process
+### CAT Graduation Process (First Token Only)
 
-**Special considerations for the first token:**
+**Special considerations for the very first graduation:**
 
-1. **CAT/USDC Pool**: Created with all `real_usdc`
-2. **No Token Swap**: No need to swap USDC → CAT
+1. **CAT/USDC Pool**: Created with all `real_usdc` (~$69K)
+2. **No Token Swap**: No need to buy CAT (it doesn't exist yet!)
 3. **Platform Activation**: Sets `platformTokenActive = true`
-4. **Reference Pool**: All future tokens reference this pool for pricing
+4. **Reference Pool**: All future graduations buy CAT from this pool
 
-### After CAT Exists
+### After CAT Exists (Every Subsequent Graduation)
 
-All subsequent tokens:
-- Swap accumulated USDC → CAT
-- Create Token/CAT pool
-- Users trade: USDC → CAT → Token (multi-hop)
+**This is where the magic happens! 🎯**
+
+All subsequent token graduations:
+
+1. **Buy CAT**: Convert all accumulated USDC → CAT via market buy
+   - Uses the CAT/USDC pool
+   - Creates buy pressure on CAT
+   - Benefits all CAT holders
+
+2. **Create Token/CAT Pool**: New Uniswap V4 pool with CAT pairing
+
+3. **Add Liquidity**: Deposit bought CAT + LP reserve tokens
+
+4. **Lock Forever**: 80% LP locked, 20% to creator
+
+**Trading Flow Post-Graduation:**
+```
+User wants Token X:
+USDC → CAT (hop 1) → Token X (hop 2)
+
+User sells Token X:
+Token X → CAT (hop 1) → USDC (hop 2)
+```
+
+Every trade touches CAT, increasing its utility and volume! 🔥
 
 ## Next Steps
 

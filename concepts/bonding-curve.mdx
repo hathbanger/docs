@@ -220,14 +220,27 @@ At this point:
 ### What Happens at Graduation
 
 1. **Airdrop**: Remaining LP reserve tokens (206,900) are airdropped to existing holders proportionally
-2. **LP Creation**: Uniswap V4 pool is created with:
-   - All accumulated `real_usdc`
-   - LP reserve tokens (206,900)
-3. **LP Locking**: 80% of LP tokens are locked forever
-4. **Creator Reward**: 20% of LP tokens go to the token creator
-5. **Hook Deployment**: Cat402Hook is attached for fee distribution
 
-See [Graduation](/concepts/graduation) for detailed documentation.
+2. **🔥 CAT Buy Pressure**: ALL accumulated `real_usdc` is used to **buy the platform token (CAT)** from the market
+   - This creates automatic buy pressure on CAT with every graduation!
+   - Example: $69,000 graduation = $69,000 CAT market buy 🚀
+   - More successful tokens = more CAT demand
+
+3. **LP Creation**: Uniswap V4 Token/CAT pool is created with:
+   - Purchased CAT tokens (from step 2)
+   - LP reserve tokens (206,900)
+
+4. **LP Locking**: 80% of LP tokens are locked forever
+
+5. **Creator Reward**: 20% of LP tokens go to the token creator
+
+6. **Hook Deployment**: Cat402Hook is attached for fee distribution
+
+<Warning>
+**Platform Token Economics**: Every successful token that graduates creates buy pressure on CAT! The first graduated token BECOMES the CAT platform token. All subsequent graduations must buy CAT to create their liquidity pools. This makes CAT increasingly valuable as the platform grows. 💰
+</Warning>
+
+See [Graduation](/concepts/graduation) for detailed CAT mechanics and platform token economics.
 
 ## Price Impact
 
