@@ -99,8 +99,8 @@
     }
   },
   "logo": {
-    "light": "/logo/light.svg",
-    "dark": "/logo/dark.svg"
+    "light": "/logo/cat.jpg",
+    "dark": "/logo/cat.jpg"
   },
   "contextual": {
     "options": [
@@ -117,17 +117,6 @@
   "footer": {
     "socials": {
       "github": "https://github.com"
-    }
-  },
-  "typography": {
-    "headings": {
-      "font": "monospace"
-    },
-    "body": {
-      "font": "monospace"
-    },
-    "code": {
-      "font": "monospace"
     }
   },
   "topbar": {

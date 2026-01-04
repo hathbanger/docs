@@ -1,9 +1,25 @@
 /* 402.cat Custom Styles - Terminal Aesthetic */
 /* Based on httpkitty/STYLE_GUIDELINES.md */
 
-/* Monospace fonts everywhere */
-* {
-  font-family: 'Courier New', Courier, monospace !important;
+/* Better readable fonts - monospace for headers/code, clean sans-serif for body */
+body,
+p,
+li,
+td,
+.prose {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', sans-serif !important;
+  font-size: 15px !important;
+  line-height: 1.7 !important;
+}
+
+/* Monospace for headers, code, and special elements */
+h1, h2, h3, h4, h5, h6,
+code,
+pre,
+kbd,
+samp,
+.monospace {
+  font-family: 'SF Mono', 'Monaco', 'Menlo', 'Consolas', 'Courier New', monospace !important;
 }
 
 /* Strong borders on cards and components */
