@@ -1,9 +1,13 @@
 /* 402.cat Custom Styles - Minimal */
 
-/* Add ASCII cat before site name */
+/* Add ASCII cat before site name and apply monospace font to entire logo */
+nav a[href="/"],
+header a[href="/"] {
+  font-family: 'Courier New', Courier, monospace !important;
+}
+
 nav a[href="/"]::before,
 header a[href="/"]::before {
-  content: "[~^._.^~] ";
-  font-family: 'Courier New', Courier, monospace;
+  content: "/\\_/\\ ( ^.^ ) > ^ < ";
   font-size: 0.9em;
 }
