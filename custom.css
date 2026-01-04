@@ -1,0 +1,275 @@
+/* 402.cat Custom Styles - Terminal Aesthetic */
+/* Based on httpkitty/STYLE_GUIDELINES.md */
+
+/* Monospace fonts everywhere */
+* {
+  font-family: 'Courier New', Courier, monospace !important;
+}
+
+/* Strong borders on cards and components */
+.card,
+.callout,
+.code-block {
+  border: 2px solid #000 !important;
+  border-radius: 0 !important; /* Sharp corners per style guide */
+}
+
+/* Code blocks with terminal styling */
+pre {
+  background-color: #000 !important;
+  color: #4ade80 !important; /* green-400 */
+  border: 2px solid #000 !important;
+  border-radius: 4px !important;
+  padding: 1rem !important;
+}
+
+/* Inline code */
+code:not(pre code) {
+  background-color: #e5e7eb !important; /* gray-200 */
+  color: #7c3aed !important; /* purple-700 */
+  padding: 0.125rem 0.25rem !important;
+  border: 1px solid #d1d5db !important; /* gray-300 */
+  border-radius: 4px !important;
+  font-size: 0.9em !important;
+}
+
+/* Buttons with bold borders */
+button,
+.button {
+  border: 2px solid #000 !important;
+  font-weight: bold !important;
+  transition: all 0.2s !important;
+}
+
+button:hover,
+.button:hover {
+  transform: translateY(1px) !important;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1) !important;
+}
+
+button:active,
+.button:active {
+  transform: translateY(2px) !important;
+}
+
+/* Terminal-style text prefixes */
+.terminal-text::before {
+  content: "> ";
+  color: #6b7280; /* gray-500 */
+}
+
+.comment-text::before {
+  content: "// ";
+  color: #6b7280; /* gray-500 */
+}
+
+/* Accent color backgrounds for sections */
+.bg-yellow-section {
+  background-color: #fffbeb !important; /* yellow-50 */
+}
+
+.bg-cyan-section {
+  background-color: #ecfeff !important; /* cyan-50 */
+}
+
+.bg-purple-section {
+  background-color: #faf5ff !important; /* purple-50 */
+}
+
+.bg-pink-section {
+  background-color: #fdf2f8 !important; /* pink-50 */
+}
+
+.bg-green-section {
+  background-color: #f0fdf4 !important; /* green-50 */
+}
+
+.bg-blue-section {
+  background-color: #eff6ff !important; /* blue-50 */
+}
+
+/* Bold section headers with emoji support */
+h1, h2, h3, h4, h5, h6 {
+  font-weight: bold !important;
+  border-bottom: 2px dashed #d1d5db !important; /* gray-300 */
+  padding-bottom: 0.5rem !important;
+  margin-bottom: 1rem !important;
+}
+
+/* Tables with strong borders */
+table {
+  border: 2px solid #000 !important;
+  border-collapse: collapse !important;
+}
+
+table th,
+table td {
+  border: 1px solid #000 !important;
+  padding: 0.5rem !important;
+}
+
+table th {
+  background-color: #f3f4f6 !important; /* gray-100 */
+  font-weight: bold !important;
+}
+
+/* Note/Tip/Warning callouts with pastel backgrounds */
+.callout-note {
+  background-color: #eff6ff !important; /* blue-50 */
+  border-color: #3b82f6 !important; /* blue-500 */
+}
+
+.callout-tip {
+  background-color: #f0fdf4 !important; /* green-50 */
+  border-color: #10b981 !important; /* green-500 */
+}
+
+.callout-warning {
+  background-color: #fffbeb !important; /* yellow-50 */
+  border-color: #f59e0b !important; /* yellow-500 */
+}
+
+.callout-danger {
+  background-color: #fef2f2 !important; /* red-50 */
+  border-color: #ef4444 !important; /* red-500 */
+}
+
+/* ASCII dividers */
+.ascii-divider {
+  border-bottom: 2px dashed #9ca3af !important; /* gray-400 */
+  text-align: center !important;
+  font-size: 10px !important;
+  color: #6b7280 !important; /* gray-500 */
+  padding-bottom: 0.75rem !important;
+  margin-bottom: 1.5rem !important;
+}
+
+/* Cat emoji styling */
+.cat-emoji {
+  font-size: 1.5em !important;
+  vertical-align: middle !important;
+}
+
+/* Link styling */
+a {
+  color: #10b981 !important; /* green-500 */
+  text-decoration: underline !important;
+  font-weight: 600 !important;
+}
+
+a:hover {
+  color: #059669 !important; /* green-600 */
+}
+
+/* Navigation improvements */
+nav {
+  border-bottom: 2px solid #000 !important;
+}
+
+/* Sidebar borders */
+.sidebar {
+  border-right: 2px solid #000 !important;
+}
+
+/* Search bar */
+.search-bar {
+  border: 2px solid #000 !important;
+  border-radius: 4px !important;
+}
+
+/* Badge/tag styling */
+.badge,
+.tag {
+  border: 1px solid #000 !important;
+  padding: 0.125rem 0.5rem !important;
+  border-radius: 4px !important;
+  font-size: 0.75rem !important;
+  font-weight: bold !important;
+}
+
+/* Gradient backgrounds for hero sections */
+.gradient-hero {
+  background: linear-gradient(to bottom right, #ecfeff, #ffffff, #fffbeb) !important;
+}
+
+/* Terminal prompt style */
+.terminal-prompt::before {
+  content: "$ ";
+  color: #6b7280; /* gray-500 */
+  user-select: none;
+}
+
+/* Status indicators */
+.status-active::before {
+  content: "🟢 ";
+}
+
+.status-graduating::before {
+  content: "🟡 ";
+}
+
+.status-graduated::before {
+  content: "🎓 ";
+}
+
+/* Responsive font sizing for mobile */
+@media (max-width: 640px) {
+  body {
+    font-size: 12px !important;
+  }
+
+  h1 {
+    font-size: 24px !important;
+  }
+
+  h2 {
+    font-size: 20px !important;
+  }
+
+  h3 {
+    font-size: 16px !important;
+  }
+}
+
+/* Light mode specific (default) */
+:root {
+  --background: #ffffff;
+  --foreground: #000000;
+  --primary: #10b981;
+  --border: #000000;
+  --accent-yellow: #fffbeb;
+  --accent-cyan: #ecfeff;
+  --accent-purple: #faf5ff;
+  --accent-pink: #fdf2f8;
+  --accent-green: #f0fdf4;
+  --accent-blue: #eff6ff;
+}
+
+/* Dark mode overrides */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0f172a;
+    --foreground: #ffffff;
+    --border: #ffffff;
+  }
+
+  pre {
+    background-color: #1e293b !important;
+  }
+
+  table th {
+    background-color: #1e293b !important;
+  }
+}
+
+/* Print styles */
+@media print {
+  * {
+    border-color: #000 !important;
+  }
+
+  pre {
+    background-color: #f3f4f6 !important;
+    color: #000 !important;
+  }
+}
