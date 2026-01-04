@@ -197,23 +197,41 @@ header {
 }
 
 /* Replace logo with ASCII cat */
-header img[src*="logo"] {
+header img,
+nav img,
+a img[src*="logo"],
+[class*="logo"] img {
   display: none !important;
+  visibility: hidden !important;
+  width: 0 !important;
+  height: 0 !important;
 }
 
-header a[href="/"] {
+/* Add ASCII cat text */
+nav a[href="/"]::after,
+header a[href="/"]::after,
+a[href="/"] img[src*="logo"]::after {
+  content: "[~^._.^~] 402.cat docs" !important;
   font-family: 'Courier New', Courier, monospace !important;
   font-size: 16px !important;
   font-weight: 700 !important;
   color: #000000 !important;
   text-decoration: none !important;
+  display: inline-block !important;
+  visibility: visible !important;
 }
 
-header a[href="/"]::before {
-  content: "[~^._.^~] 402.cat docs" !important;
-  font-family: 'Courier New', Courier, monospace !important;
-  font-weight: 700 !important;
-  color: #000000 !important;
+/* Make the link itself visible */
+nav a[href="/"],
+header a[href="/"] {
+  font-size: 0 !important;
+  line-height: 0 !important;
+}
+
+nav a[href="/"]::after,
+header a[href="/"]::after {
+  font-size: 16px !important;
+  line-height: normal !important;
 }
 
 /* Hide any gradient backgrounds in header */
@@ -316,12 +334,76 @@ header a:hover {
     --border: #ffffff;
   }
 
+  body,
+  p,
+  li,
+  td,
+  .prose,
+  h1, h2, h3, h4, h5, h6,
+  span,
+  div {
+    color: #ffffff !important;
+  }
+
+  nav,
+  header {
+    background-color: #0f172a !important;
+    border-bottom: 2px solid #ffffff !important;
+  }
+
+  nav a,
+  header a {
+    color: #ffffff !important;
+  }
+
+  nav a[href="/"]::after,
+  header a[href="/"]::after {
+    color: #ffffff !important;
+  }
+
   pre {
+    background-color: #000000 !important;
+    border: 2px solid #ffffff !important;
+  }
+
+  code:not(pre code) {
     background-color: #1e293b !important;
+    color: #ffffff !important;
+    border: 1px solid #4b5563 !important;
+  }
+
+  table {
+    border: 2px solid #ffffff !important;
+  }
+
+  table th,
+  table td {
+    border: 1px solid #ffffff !important;
   }
 
   table th {
     background-color: #1e293b !important;
+  }
+
+  .card,
+  .callout,
+  .code-block {
+    border: 2px solid #ffffff !important;
+    box-shadow: 6px 6px 0 0 rgb(255, 255, 255) !important;
+  }
+
+  button,
+  .button {
+    border: 2px solid #ffffff !important;
+    box-shadow: 4px 4px 0 0 rgb(255, 255, 255) !important;
+  }
+
+  .sidebar {
+    border-right: 2px solid #ffffff !important;
+  }
+
+  a {
+    color: #ffffff !important;
   }
 }
 
