@@ -7,9 +7,9 @@
     "isHidden": false
   },
   "colors": {
-    "primary": "#ff006e",
-    "light": "#00d4ff",
-    "dark": "#8b5cf6"
+    "primary": "#000000",
+    "light": "#4b5563",
+    "dark": "#000000"
   },
   "favicon": "/favicon.svg",
   "navigation": {

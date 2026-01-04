@@ -1,38 +1,19 @@
-/* 402.cat Custom Styles - Retro Futuristic Neon */
-/* Matching httpkitty aesthetic */
+/* 402.cat Custom Styles - Minimal Terminal Aesthetic */
+/* Matching httpkitty clean design */
 
-/* Import Google Fonts */
-@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Share+Tech+Mono&display=swap');
+/* Courier New everywhere - simple terminal font */
+* {
+  font-family: 'Courier New', Courier, monospace !important;
+}
 
-/* Base fonts - Courier New for body (retro terminal) */
 body,
 p,
 li,
 td,
 .prose {
-  font-family: 'Courier New', Courier, monospace !important;
   font-size: 15px !important;
   line-height: 1.7 !important;
-}
-
-/* Orbitron for headers (retro-futuristic display) */
-h1, h2, h3, h4, h5, h6 {
-  font-family: 'Orbitron', 'Courier New', monospace !important;
-  font-weight: 700 !important;
-}
-
-/* Share Tech Mono for subtitles and special text */
-.subtitle,
-.stat-label {
-  font-family: 'Share Tech Mono', monospace !important;
-}
-
-/* Code blocks keep monospace */
-code,
-pre,
-kbd,
-samp {
-  font-family: 'Courier New', Courier, monospace !important;
+  color: #000000 !important;
 }
 
 /* Strong borders on cards with neo-brutalist shadows */
@@ -51,26 +32,24 @@ samp {
   box-shadow: 4px 4px 0 0 rgb(0, 0, 0) !important;
 }
 
-/* Code blocks with neon terminal styling */
+/* Simple terminal code blocks */
 pre {
   background-color: #000 !important;
-  color: var(--neon-lime) !important;
+  color: #00ff41 !important; /* Just a touch of green for terminal feel */
   border: 2px solid #000 !important;
   border-radius: 4px !important;
   padding: 1rem !important;
-  box-shadow: 0 0 20px rgba(0, 255, 65, 0.2), 4px 4px 0 0 rgb(0, 0, 0) !important;
-  text-shadow: 0 0 5px rgba(0, 255, 65, 0.5) !important;
+  box-shadow: 4px 4px 0 0 rgb(0, 0, 0) !important;
 }
 
-/* Inline code with neon purple */
+/* Inline code - minimal styling */
 code:not(pre code) {
-  background-color: rgba(139, 92, 246, 0.1) !important;
-  color: var(--neon-purple) !important;
+  background-color: #f3f4f6 !important;
+  color: #000000 !important;
   padding: 0.125rem 0.25rem !important;
-  border: 1px solid var(--neon-purple) !important;
+  border: 1px solid #d1d5db !important;
   border-radius: 4px !important;
   font-size: 0.9em !important;
-  box-shadow: 0 0 10px rgba(139, 92, 246, 0.2) !important;
 }
 
 /* Buttons with neo-brutalist shadows */
@@ -130,28 +109,13 @@ button:active,
   background-color: #eff6ff !important; /* blue-50 */
 }
 
-/* Bold section headers with neon glow */
+/* Simple bold headers */
 h1, h2, h3, h4, h5, h6 {
   font-weight: 700 !important;
   border-bottom: 2px solid #000 !important;
   padding-bottom: 0.5rem !important;
   margin-bottom: 1rem !important;
-  text-shadow: 0 0 20px rgba(255, 0, 110, 0.3) !important;
-}
-
-h1 {
-  color: var(--neon-pink) !important;
-  text-shadow: 0 0 20px rgba(255, 0, 110, 0.5) !important;
-}
-
-h2 {
-  color: var(--neon-purple) !important;
-  text-shadow: 0 0 15px rgba(139, 92, 246, 0.4) !important;
-}
-
-h3 {
-  color: var(--neon-cyan) !important;
-  text-shadow: 0 0 15px rgba(0, 212, 255, 0.4) !important;
+  color: #000000 !important;
 }
 
 /* Tables with strong borders */
@@ -171,29 +135,29 @@ table th {
   font-weight: bold !important;
 }
 
-/* Note/Tip/Warning callouts with neon borders and glow */
+/* Simple callouts with minimal styling */
 .callout-note {
-  background-color: rgba(0, 212, 255, 0.05) !important;
-  border-color: var(--neon-cyan) !important;
-  box-shadow: 0 0 20px rgba(0, 212, 255, 0.2), 6px 6px 0 0 rgb(0, 0, 0) !important;
+  background-color: #eff6ff !important;
+  border-color: #000 !important;
+  box-shadow: 4px 4px 0 0 rgb(0, 0, 0) !important;
 }
 
 .callout-tip {
-  background-color: rgba(0, 255, 65, 0.05) !important;
-  border-color: var(--neon-lime) !important;
-  box-shadow: 0 0 20px rgba(0, 255, 65, 0.2), 6px 6px 0 0 rgb(0, 0, 0) !important;
+  background-color: #f0fdf4 !important;
+  border-color: #000 !important;
+  box-shadow: 4px 4px 0 0 rgb(0, 0, 0) !important;
 }
 
 .callout-warning {
-  background-color: rgba(251, 191, 36, 0.05) !important;
-  border-color: var(--status-yellow) !important;
-  box-shadow: 0 0 20px rgba(251, 191, 36, 0.2), 6px 6px 0 0 rgb(0, 0, 0) !important;
+  background-color: #fffbeb !important;
+  border-color: #000 !important;
+  box-shadow: 4px 4px 0 0 rgb(0, 0, 0) !important;
 }
 
 .callout-danger {
-  background-color: rgba(255, 0, 110, 0.05) !important;
-  border-color: var(--neon-pink) !important;
-  box-shadow: 0 0 20px rgba(255, 0, 110, 0.2), 6px 6px 0 0 rgb(0, 0, 0) !important;
+  background-color: #fef2f2 !important;
+  border-color: #000 !important;
+  box-shadow: 4px 4px 0 0 rgb(0, 0, 0) !important;
 }
 
 /* ASCII dividers */
@@ -212,23 +176,51 @@ table th {
   vertical-align: middle !important;
 }
 
-/* Link styling with neon cyan glow */
+/* Simple link styling */
 a {
-  color: var(--neon-cyan) !important;
+  color: #000000 !important;
   text-decoration: underline !important;
   font-weight: 600 !important;
-  text-shadow: 0 0 10px rgba(0, 212, 255, 0.3) !important;
-  transition: all 0.2s ease !important;
+  transition: opacity 0.2s ease !important;
 }
 
 a:hover {
-  color: var(--neon-lime) !important;
-  text-shadow: 0 0 15px rgba(0, 255, 65, 0.5) !important;
+  opacity: 0.7 !important;
 }
 
-/* Navigation improvements */
-nav {
+/* Navigation - minimal httpkitty style */
+nav,
+header {
   border-bottom: 2px solid #000 !important;
+  background-color: #ffffff !important;
+  box-shadow: none !important;
+}
+
+/* Logo area - make it cleaner */
+.logo,
+[class*="logo"],
+header img {
+  max-height: 32px !important;
+  filter: none !important;
+}
+
+/* Hide any gradient backgrounds in header */
+header {
+  background-image: none !important;
+}
+
+/* Navigation links - simple and clean */
+nav a,
+header a {
+  color: #000000 !important;
+  font-weight: 500 !important;
+  text-decoration: none !important;
+}
+
+nav a:hover,
+header a:hover {
+  text-decoration: underline !important;
+  opacity: 1 !important;
 }
 
 /* Sidebar borders */
@@ -296,31 +288,12 @@ nav {
   }
 }
 
-/* Neon color palette (httpkitty theme) */
+/* Minimal color palette */
 :root {
   --background: #ffffff;
   --foreground: #000000;
   --border: #000000;
-
-  /* Neon colors */
-  --neon-pink: #ff006e;
-  --neon-purple: #8b5cf6;
-  --neon-cyan: #00d4ff;
-  --neon-lime: #00ff41;
-
-  /* Status colors */
-  --status-green: #10B981;
-  --status-blue: #3B82F6;
-  --status-yellow: #FBBF24;
-  --status-red: #EF4444;
-
-  /* Legacy accent colors */
-  --accent-yellow: #fffbeb;
-  --accent-cyan: #ecfeff;
-  --accent-purple: #faf5ff;
-  --accent-pink: #fdf2f8;
-  --accent-green: #f0fdf4;
-  --accent-blue: #eff6ff;
+  --terminal-green: #00ff41;
 }
 
 /* Dark mode overrides */
