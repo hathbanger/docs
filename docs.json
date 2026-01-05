@@ -41,6 +41,16 @@
             ]
           },
           {
+            "group": "SDK",
+            "pages": [
+              "sdk/overview",
+              "sdk/installation",
+              "sdk/server",
+              "sdk/client",
+              "sdk/referrals"
+            ]
+          },
+          {
             "group": "Core Concepts",
             "pages": [
               "concepts/bonding-curve",
@@ -60,7 +70,8 @@
             "group": "Introduction",
             "pages": [
               "api-reference/overview",
-              "api-reference/authentication"
+              "api-reference/authentication",
+              "api-reference/entrypoints"
             ]
           },
           {

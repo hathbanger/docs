@@ -1,0 +1,357 @@
+---
+title: "Entrypoints"
+description: "Paid API endpoints with x402 micropayments"
+---
+
+# Entrypoints
+
+Entrypoints are paid API endpoints that require x402 micropayments. Each returns a 402 response on first request, then processes the paid request after payment settlement.
+
+## Base URL
+
+- **Mainnet:** `https://agent.402.cat` (Base: `eip155:8453`)
+- **Testnet:** `https://agent.402.cat` (Base Sepolia: `eip155:84532`)
+
+## Authentication Flow
+
+1. **Initial Request** → 402 Payment Required
+2. **Parse** `PAYMENT-REQUIRED` header
+3. **Sign** EIP-3009 authorization
+4. **Retry** with `PAYMENT-SIGNATURE` header
+5. **Receive** response with `tx_hash`
+
+See [Authentication](/api-reference/authentication) for details.
+
+---
+
+## Token Operations
+
+### Create Token
+
+Create a new bonding curve token.
+
+<ParamField path="POST" body="/entrypoints/create_token/invoke">
+  **Fee:** $0.01
+</ParamField>
+
+```json Request
+{
+  "name": "My Token",
+  "symbol": "MTK",
+  "description": "A test token",
+  "image_url": "https://example.com/image.png",
+  "social_links": {
+    "twitter": "https://twitter.com/mytoken"
+  }
+}
+```
+
+```json Response
+{
+  "token_address": "0x...",
+  "tx_hash": "0x...",
+  "initial_price": "0.000001"
+}
+```
+
+### Buy Token
+
+Purchase tokens from bonding curve. Multiple fee tiers available.
+
+<Tabs>
+  <Tab title="$0.05 Fee">
+    <ParamField path="POST" body="/entrypoints/token_buy/invoke">
+      **Fee:** $0.05 | **Max USDC:** $10
+    </ParamField>
+  </Tab>
+  <Tab title="$0.10 Fee">
+    <ParamField path="POST" body="/entrypoints/token_buy_medium/invoke">
+      **Fee:** $0.10 | **Max USDC:** $100
+    </ParamField>
+  </Tab>
+  <Tab title="$0.20 Fee">
+    <ParamField path="POST" body="/entrypoints/token_buy_large/invoke">
+      **Fee:** $0.20 | **Max USDC:** $1,000
+    </ParamField>
+  </Tab>
+</Tabs>
+
+```json Request
+{
+  "token_address": "0x...",
+  "amount_usdc": 1000000,
+  "min_tokens_out": "0",
+  "slippage_bps": 100
+}
+```
+
+```json Response
+{
+  "tokens_bought": "1000000000000000000",
+  "usdc_spent": 1000000,
+  "price_per_token": "0.000001",
+  "tx_hash": "0x...",
+  "new_price": "0.0000015"
+}
+```
+
+### Sell Token
+
+Sell tokens back to bonding curve.
+
+<ParamField path="POST" body="/entrypoints/token_sell/invoke">
+  **Fee:** $0.01
+</ParamField>
+
+```json Request
+{
+  "token_address": "0x...",
+  "amount_tokens": "1000000000000000000",
+  "min_usdc_out": 0,
+  "slippage_bps": 100
+}
+```
+
+```json Response
+{
+  "usdc_received": 950000,
+  "tokens_sold": "1000000000000000000",
+  "tx_hash": "0x...",
+  "new_price": "0.0000008"
+}
+```
+
+---
+
+## Universal Swap
+
+Swap any token via Uniswap V4 routing.
+
+<ParamField path="POST" body="/entrypoints/universal_swap/invoke">
+  **Fee:** Variable (0.1% of swap value)
+</ParamField>
+
+```json Request
+{
+  "token_in": "0xUSDC...",
+  "token_out": "0xCAT...",
+  "amount_in": 1000000,
+  "min_amount_out": "0",
+  "slippage_bps": 50
+}
+```
+
+```json Response
+{
+  "amount_out": "20000000000000000000",
+  "price_impact": "0.12",
+  "tx_hash": "0x...",
+  "route": ["USDC", "CAT"]
+}
+```
+
+---
+
+## Chat Operations
+
+### Join Chat
+
+Join a token's chat room with lease-based access.
+
+<ParamField path="POST" body="/entrypoints/chat_join/invoke">
+  **Fee:** $0.01
+</ParamField>
+
+```json Request
+{
+  "token_address": "0x...",
+  "lease_duration_secs": 3600
+}
+```
+
+```json Response
+{
+  "lease_id": "uuid",
+  "expires_at": "2025-01-05T12:00:00Z",
+  "websocket_url": "wss://agent.402.cat/chat/ws"
+}
+```
+
+### Send Message
+
+Send a message to token chat.
+
+<ParamField path="POST" body="/entrypoints/chat_message/invoke">
+  **Fee:** $0.0001
+</ParamField>
+
+```json Request
+{
+  "token_address": "0x...",
+  "message": "Hello world!"
+}
+```
+
+```json Response
+{
+  "message_id": "uuid",
+  "timestamp": "2025-01-05T10:30:00Z"
+}
+```
+
+### Renew Lease
+
+Extend chat access lease.
+
+<ParamField path="POST" body="/entrypoints/chat_renew_lease/invoke">
+  **Fee:** $0.01
+</ParamField>
+
+```json Request
+{
+  "lease_id": "uuid",
+  "additional_secs": 3600
+}
+```
+
+```json Response
+{
+  "lease_id": "uuid",
+  "new_expires_at": "2025-01-05T13:00:00Z"
+}
+```
+
+---
+
+## Referral Endpoints
+
+### Get Leaderboard
+
+<ParamField path="GET" body="/api/referrals/leaderboard">
+  **Fee:** Free
+</ParamField>
+
+```json Response
+{
+  "entries": [
+    {
+      "rank": 1,
+      "referrerAddress": "0x...",
+      "referrerHandle": "@goose",
+      "totalReferrals": 142,
+      "totalUsdcEarned": "142.50"
+    }
+  ]
+}
+```
+
+### Get Referrer Stats
+
+<ParamField path="GET" body="/api/referrals/stats/:address">
+  **Fee:** Free
+</ParamField>
+
+```json Response
+{
+  "referrerAddress": "0x...",
+  "referrerHandle": "@goose",
+  "totalReferrals": 142,
+  "uniquePayers": 37,
+  "totalUsdcEarned": "142.50",
+  "totalCatEarned": "2850000000000000000"
+}
+```
+
+### Get Payout History
+
+<ParamField path="GET" body="/api/referrals/payouts/:address">
+  **Fee:** Free
+</ParamField>
+
+```json Response
+{
+  "payouts": [
+    {
+      "id": "uuid",
+      "paymentTxHash": "0x...",
+      "payoutTxHash": "0x...",
+      "feeUsdc": 100000,
+      "referralUsdc": 10000,
+      "catAmount": "200000000000000000",
+      "status": "success",
+      "createdAt": "2025-01-05T10:00:00Z"
+    }
+  ]
+}
+```
+
+---
+
+## Error Responses
+
+All entrypoints return consistent error format:
+
+```json
+{
+  "error": {
+    "code": "INSUFFICIENT_BALANCE",
+    "message": "Payer has insufficient USDC balance",
+    "details": {
+      "required": 1000000,
+      "available": 500000
+    }
+  }
+}
+```
+
+### Error Codes
+
+| Code | HTTP Status | Description |
+|------|-------------|-------------|
+| `PAYMENT_REQUIRED` | 402 | No payment signature provided |
+| `PAYMENT_INVALID` | 402 | Invalid payment signature |
+| `PAYMENT_EXPIRED` | 402 | Payment authorization expired |
+| `INSUFFICIENT_BALANCE` | 402 | Not enough USDC |
+| `SLIPPAGE_EXCEEDED` | 400 | Price moved beyond tolerance |
+| `TOKEN_NOT_FOUND` | 404 | Token address not found |
+| `INTERNAL_ERROR` | 500 | Server error |
+
+---
+
+## Headers
+
+### Request Headers
+
+| Header | Required | Description |
+|--------|----------|-------------|
+| `PAYMENT-SIGNATURE` | Yes (retry) | Base64-encoded payment signature |
+| `X-402-Referrer` | No | Referrer handle or address |
+| `Content-Type` | Yes | `application/json` |
+
+### Response Headers
+
+| Header | Description |
+|--------|-------------|
+| `PAYMENT-REQUIRED` | Base64-encoded payment requirements (on 402) |
+| `X-Transaction-Hash` | Settlement transaction hash |
+| `X-Payer-Address` | Payer wallet address |
+
+---
+
+## Rate Limits
+
+| Endpoint Type | Limit |
+|---------------|-------|
+| Free endpoints | 100 req/min |
+| Paid endpoints | No limit (payment is rate limiting) |
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Authentication" icon="lock" href="/api-reference/authentication">
+    Detailed payment flow
+  </Card>
+  <Card title="SDK" icon="code" href="/sdk/overview">
+    Use the SDK for easier integration
+  </Card>
+</CardGroup>
