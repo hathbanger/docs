@@ -1,15 +1,15 @@
 {
   "$schema": "https://mintlify.com/docs.json",
   "theme": "maple",
-  "name": "[~^._.^~] 402.cat",
+  "name": "▲▲ 402.cat",
   "appearance": {
-    "default": "light",
-    "strict": false
+    "default": "dark",
+    "strict": true
   },
   "colors": {
-    "primary": "#000000",
-    "light": "#4b5563",
-    "dark": "#000000"
+    "primary": "#00FF9D",
+    "light": "#A1A1AA",
+    "dark": "#050505"
   },
   "favicon": "/favicon.svg",
   "navigation": {
@@ -118,8 +118,5 @@
   },
   "footer": {
     "socials": {}
-  },
-  "topbar": {
-    "style": "default"
   }
 }

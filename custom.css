@@ -1,11 +1,85 @@
-/* 402.cat Custom Styles - Minimal */
+/* Feral Design System for Mintlify */
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap');
 
-/* Force monospace font stack on the logo - matching httpkitty */
-[class*="logo"],
-[class*="Logo"],
-nav a,
-header a,
-a[href="/"] {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace !important;
+:root {
+  --cat-bg: #050505;
+  --cat-fg: #F8F9FA;
+  --cat-accent: #00FF9D;
+  --cat-muted: #A1A1AA;
+  --cat-border: #27272A;
+}
+
+/* Force dark mode background and font */
+body, html {
+  background-color: var(--cat-bg) !important;
+  color: var(--cat-fg) !important;
+  font-family: 'JetBrains Mono', monospace !important;
+}
+
+/* Typography Overrides */
+h1, h2, h3, h4, h5, h6, p, span, div, a, li, code {
+  font-family: 'JetBrains Mono', monospace !important;
+}
+
+/* Sidebar */
+nav {
+  background-color: #09090B !important;
+  border-right: 1px solid var(--cat-border) !important;
+}
+
+/* Main Content Area */
+main {
+  background-color: var(--cat-bg) !important;
+}
+
+/* Links */
+a {
+  color: var(--cat-accent);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+  text-decoration-color: var(--cat-accent);
+}
+
+/* Code Blocks */
+pre, code, .code-block {
+  background-color: #000000 !important;
+  border: 1px solid var(--cat-border) !important;
+  border-radius: 0px !important;
+  font-family: 'JetBrains Mono', monospace !important;
+}
+
+/* Search Bar */
+input[type="search"] {
+  background-color: #18181B !important;
+  border: 1px solid var(--cat-border) !important;
+  border-radius: 0px !important;
+  color: var(--cat-fg) !important;
+  font-family: 'JetBrains Mono', monospace !important;
+}
+
+/* Cards/Containers */
+.card, [class*="Card"] {
+  background-color: #0A0A0A !important;
+  border: 1px solid var(--cat-border) !important;
+  border-radius: 0px !important;
+}
+
+/* Remove rounded corners globally */
+* {
+  border-radius: 0px !important;
+}
+
+/* Logo Styling */
+[class*="logo"], [class*="Logo"] {
   font-weight: 700 !important;
+  letter-spacing: -0.05em !important;
+}
+
+/* Selection */
+::selection {
+  background-color: var(--cat-accent);
+  color: #000;
 }
