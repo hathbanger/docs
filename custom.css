@@ -1,13 +1,14 @@
-/* Feral Design System for Mintlify - Developer Edition */
+/* Feral Design System for Mintlify - Developer Utility */
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap');
 
 :root {
   --cat-bg: #18181B; /* Zinc 900 - Muted Dark */
   --cat-fg: #E4E4E7; /* Zinc 200 - Off-white text */
-  --cat-accent: #FFFFFF; /* Stark White */
+  --cat-accent: #00FF9D; /* HTTPCat Green (ANSI) */
   --cat-muted: #71717A; /* Zinc 500 */
   --cat-border: #27272A; /* Zinc 800 */
   --cat-code-bg: #000000; /* Pitch Black for code */
+  --cat-inline-code-bg: #27272A; /* Zinc 800 */
 }
 
 /* Force dark mode background and font */
@@ -31,7 +32,7 @@ p, span, div, a, li {
 
 /* Sidebar */
 nav {
-  background-color: #121212 !important; /* Slightly darker than main */
+  background-color: #121212 !important;
   border-right: 1px solid var(--cat-border) !important;
 }
 
@@ -44,16 +45,15 @@ main {
 a {
   color: var(--cat-accent);
   text-decoration: none;
-  border-bottom: 1px solid transparent;
-  transition: border-color 0.2s;
+  transition: opacity 0.2s;
 }
 
 a:hover {
-  text-decoration: none !important;
-  border-bottom: 1px solid var(--cat-accent);
+  text-decoration: underline !important;
+  opacity: 0.8;
 }
 
-/* Code Blocks - The Star of the Show */
+/* Code Blocks - Pitch Black Terminal */
 pre, code, .code-block {
   background-color: var(--cat-code-bg) !important;
   border: 1px solid var(--cat-border) !important;
@@ -62,12 +62,14 @@ pre, code, .code-block {
   font-size: 13px !important;
 }
 
-/* Inline Code */
+/* Inline Code - Subtle Pop */
 :not(pre) > code {
-  background-color: #27272A !important;
-  color: #FFFFFF !important;
-  padding: 2px 4px !important;
-  border: none !important;
+  background-color: var(--cat-inline-code-bg) !important;
+  color: var(--cat-accent) !important; /* Green text for "ANSI" feel */
+  padding: 2px 6px !important;
+  border-radius: 0px !important; /* Strict sharp edges */
+  font-weight: 500 !important;
+  border: 1px solid var(--cat-border) !important;
 }
 
 /* Search Bar */
@@ -81,18 +83,18 @@ input[type="search"] {
 
 /* Cards/Containers */
 .card, [class*="Card"] {
-  background-color: #202023 !important; /* Slightly lighter than bg */
+  background-color: #202023 !important;
   border: 1px solid var(--cat-border) !important;
   border-radius: 0px !important;
   transition: border-color 0.2s;
 }
 
 .card:hover, [class*="Card"]:hover {
-  border-color: #52525B !important;
+  border-color: var(--cat-muted) !important;
 }
 
-/* Remove rounded corners globally */
-* {
+/* Remove rounded corners generally (except inline code/buttons if desired) */
+div, section, article {
   border-radius: 0px !important;
 }
 
@@ -100,13 +102,13 @@ input[type="search"] {
 [class*="logo"], [class*="Logo"] {
   font-weight: 700 !important;
   letter-spacing: -0.05em !important;
-  color: #FFFFFF !important;
+  color: var(--cat-accent) !important;
 }
 
 /* Selection */
 ::selection {
-  background-color: #3F3F46;
-  color: #FFFFFF;
+  background-color: var(--cat-accent);
+  color: #000000;
 }
 
 /* Scrollbar */
@@ -117,9 +119,9 @@ input[type="search"] {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #3F3F46;
+  background: var(--cat-border);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #52525B;
+  background: var(--cat-muted);
 }
