@@ -1,0 +1,230 @@
+---
+title: "Server Setup"
+description: "Configure paid API endpoints with x402 micropayments"
+---
+
+# Server Setup
+
+This guide shows how to add payment requirements to your API endpoints.
+
+## Create Server Instance
+
+```typescript
+import { create402Server } from '@402cat/sdk/server';
+
+const server = create402Server({
+  // Required: Your wallet address
+  payTo: '0xYourWalletAddress',
+
+  // Required: Network
+  network: 'base-sepolia', // or 'base' for mainnet
+
+  // Optional: Custom facilitator (defaults to 402.cat)
+  facilitatorUrl: 'https://agent.402.cat',
+
+  // Optional: Referral configuration
+  referral: {
+    enabled: true,
+    percentage: 10,      // 10% to referrer
+    payInCat: true,      // Pay in CAT tokens
+  },
+});
+```
+
+## Payment Middleware
+
+The `requirePayment()` middleware handles the entire x402 flow:
+
+```typescript
+import express from 'express';
+import { requirePayment } from '@402cat/sdk/server';
+
+const app = express();
+
+app.post('/api/generate',
+  requirePayment(server, {
+    amount: '0.05',                    // $0.05 USD
+    description: 'Generate AI content' // Shown in 402 response
+  }),
+  async (req, res) => {
+    // Access payment info
+    const { payer, amount, txHash, referrer } = req.payment;
+
+    // Your business logic
+    const result = await generateContent(req.body.prompt);
+
+    res.json({
+      result,
+      payment: { payer, txHash }
+    });
+  }
+);
+```
+
+## Payment Requirement Options
+
+```typescript
+interface PaymentRequirement {
+  // Required
+  amount: string;          // USD amount (e.g., "0.05", "1.00")
+
+  // Optional
+  description?: string;    // For agent discovery
+  timeout?: number;        // Seconds until payment expires (default: 300)
+}
+```
+
+## Accessing Payment Context
+
+After payment verification, `req.payment` contains:
+
+```typescript
+interface PaymentContext {
+  payer: string;           // Payer's wallet address
+  amount: bigint;          // Amount in USDC micros (6 decimals)
+  txHash: string;          // Settlement transaction hash
+  referrer?: string;       // Referrer address (if X-402-Referrer header present)
+  referrerHandle?: string; // Original handle (e.g., "@goose")
+}
+```
+
+## Framework Examples
+
+<Tabs>
+  <Tab title="Express">
+    ```typescript
+    import express from 'express';
+    import { create402Server, requirePayment } from '@402cat/sdk/server';
+
+    const app = express();
+    const server = create402Server({ payTo: '0x...', network: 'base-sepolia' });
+
+    app.post('/api/service',
+      requirePayment(server, { amount: '0.10' }),
+      (req, res) => {
+        res.json({ success: true, payer: req.payment.payer });
+      }
+    );
+    ```
+  </Tab>
+
+  <Tab title="Next.js App Router">
+    ```typescript
+    // app/api/service/route.ts
+    import { create402Server, withPayment } from '@402cat/sdk/server';
+    import { NextRequest } from 'next/server';
+
+    const server = create402Server({ payTo: '0x...', network: 'base-sepolia' });
+
+    export const POST = withPayment(server, { amount: '0.10' },
+      async (req: NextRequest, payment) => {
+        return Response.json({
+          success: true,
+          payer: payment.payer
+        });
+      }
+    );
+    ```
+  </Tab>
+
+  <Tab title="Hono">
+    ```typescript
+    import { Hono } from 'hono';
+    import { create402Server, honoPayment } from '@402cat/sdk/server';
+
+    const app = new Hono();
+    const server = create402Server({ payTo: '0x...', network: 'base-sepolia' });
+
+    app.post('/api/service',
+      honoPayment(server, { amount: '0.10' }),
+      (c) => {
+        const payment = c.get('payment');
+        return c.json({ success: true, payer: payment.payer });
+      }
+    );
+    ```
+  </Tab>
+</Tabs>
+
+## Free Endpoints
+
+Not all endpoints need payment. Mix paid and free:
+
+```typescript
+// Free endpoint
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok' });
+});
+
+// Paid endpoint
+app.post('/api/premium',
+  requirePayment(server, { amount: '0.25' }),
+  (req, res) => {
+    res.json({ premium: true });
+  }
+);
+```
+
+## Dynamic Pricing
+
+For variable pricing based on request content:
+
+```typescript
+import { requireDynamicPayment } from '@402cat/sdk/server';
+
+app.post('/api/llm',
+  requireDynamicPayment(server, (req) => ({
+    // Calculate price based on input
+    amount: calculateTokenCost(req.body.prompt),
+    description: `LLM generation (${countTokens(req.body.prompt)} tokens)`
+  })),
+  async (req, res) => {
+    const result = await callLLM(req.body.prompt);
+    res.json({ result });
+  }
+);
+```
+
+## Error Handling
+
+```typescript
+app.post('/api/service',
+  requirePayment(server, { amount: '0.10' }),
+  async (req, res) => {
+    try {
+      // Your logic
+    } catch (error) {
+      // Payment already settled - handle gracefully
+      console.error('Service error after payment:', error);
+      res.status(500).json({
+        error: 'Service failed',
+        txHash: req.payment.txHash,  // Provide for refund reference
+      });
+    }
+  }
+);
+```
+
+## Testing
+
+Use testnet for development:
+
+```typescript
+const server = create402Server({
+  payTo: '0xYourTestnetAddress',
+  network: 'base-sepolia',  // Testnet
+});
+```
+
+Get testnet USDC from the [Base Sepolia faucet](https://www.alchemy.com/faucets/base-sepolia).
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Client Usage" icon="code" href="/sdk/client">
+    Build agents that call your API
+  </Card>
+  <Card title="Referrals" icon="share" href="/sdk/referrals">
+    Set up referral tracking
+  </Card>
+</CardGroup>

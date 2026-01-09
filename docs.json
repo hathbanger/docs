@@ -1,15 +1,15 @@
 {
   "$schema": "https://mintlify.com/docs.json",
   "theme": "maple",
-  "name": "[~^._.^~] 402.cat",
+  "name": "▲  ▲ 402.cat",
   "appearance": {
-    "default": "light",
-    "strict": false
+    "default": "dark",
+    "strict": true
   },
   "colors": {
-    "primary": "#000000",
-    "light": "#4b5563",
-    "dark": "#000000"
+    "primary": "#FFFFFF",
+    "light": "#A1A1AA",
+    "dark": "#18181B"
   },
   "favicon": "/favicon.svg",
   "navigation": {
@@ -41,6 +41,16 @@
             ]
           },
           {
+            "group": "SDK",
+            "pages": [
+              "sdk/overview",
+              "sdk/installation",
+              "sdk/server",
+              "sdk/client",
+              "sdk/referrals"
+            ]
+          },
+          {
             "group": "Core Concepts",
             "pages": [
               "concepts/bonding-curve",
@@ -61,7 +71,8 @@
             "group": "Introduction",
             "pages": [
               "api-reference/overview",
-              "api-reference/authentication"
+              "api-reference/authentication",
+              "api-reference/entrypoints"
             ]
           },
           {
@@ -108,8 +119,5 @@
   },
   "footer": {
     "socials": {}
-  },
-  "topbar": {
-    "style": "default"
   }
 }

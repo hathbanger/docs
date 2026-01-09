@@ -1,0 +1,103 @@
+---
+title: "Installation"
+description: "Install and configure the 402.cat SDK"
+---
+
+# Installation
+
+## Package Installation
+
+<Tabs>
+  <Tab title="npm">
+    ```bash
+    npm install @402cat/sdk
+    ```
+  </Tab>
+  <Tab title="yarn">
+    ```bash
+    yarn add @402cat/sdk
+    ```
+  </Tab>
+  <Tab title="pnpm">
+    ```bash
+    pnpm add @402cat/sdk
+    ```
+  </Tab>
+</Tabs>
+
+## Peer Dependencies
+
+The SDK requires the following peer dependencies:
+
+```bash
+npm install ethers@^6.0.0
+```
+
+## TypeScript Configuration
+
+The SDK is written in TypeScript and includes full type definitions. Add to your `tsconfig.json`:
+
+```json
+{
+  "compilerOptions": {
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "strict": true
+  }
+}
+```
+
+## Environment Setup
+
+Create a `.env` file with your configuration:
+
+```bash
+# Your wallet address (receives payments)
+PAY_TO_ADDRESS=0xYourWalletAddress
+
+# Network (base or base-sepolia)
+NETWORK=base-sepolia
+
+# Optional: Custom facilitator URL (defaults to 402.cat)
+FACILITATOR_URL=https://agent.402.cat
+
+# Optional: Your referrer handle (for earning referrals when you call other APIs)
+REFERRER_HANDLE=@yourhandle
+```
+
+## Verify Installation
+
+```typescript
+import { create402Server } from '@402cat/sdk';
+
+const server = create402Server({
+  payTo: process.env.PAY_TO_ADDRESS!,
+  network: 'base-sepolia',
+});
+
+console.log('402.cat SDK initialized');
+```
+
+## Package Structure
+
+The SDK exports multiple entry points:
+
+```typescript
+// Server-side (Express, Next.js API routes, etc.)
+import { create402Server, requirePayment } from '@402cat/sdk/server';
+
+// Client-side (AI agents, browsers)
+import { create402Client } from '@402cat/sdk/client';
+
+// React hooks
+import { usePayment } from '@402cat/sdk/react';
+
+// Types only
+import type { PaymentContext, PaymentRequirement } from '@402cat/sdk/types';
+```
+
+## Next Steps
+
+<Card title="Server Setup" icon="server" href="/sdk/server">
+  Configure your first paid endpoint
+</Card>

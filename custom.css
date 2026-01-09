@@ -1,11 +1,127 @@
-/* 402.cat Custom Styles - Minimal */
+/* Feral Design System for Mintlify - Developer Utility */
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap');
 
-/* Force monospace font stack on the logo - matching httpkitty */
-[class*="logo"],
-[class*="Logo"],
-nav a,
-header a,
-a[href="/"] {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace !important;
+:root {
+  --cat-bg: #18181B; /* Zinc 900 - Muted Dark */
+  --cat-fg: #E4E4E7; /* Zinc 200 - Off-white text */
+  --cat-accent: #FFFFFF; /* Stark White */
+  --cat-muted: #71717A; /* Zinc 500 */
+  --cat-border: #27272A; /* Zinc 800 */
+  --cat-code-bg: #000000; /* Pitch Black for code */
+  --cat-inline-code-bg: #27272A; /* Zinc 800 */
+}
+
+/* Force dark mode background and font */
+body, html {
+  background-color: var(--cat-bg) !important;
+  color: var(--cat-fg) !important;
+  font-family: 'JetBrains Mono', monospace !important;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Typography Overrides */
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'JetBrains Mono', monospace !important;
+  color: #FFFFFF !important;
+  letter-spacing: -0.02em;
+}
+
+p, span, div, a, li {
+  font-family: 'JetBrains Mono', monospace !important;
+}
+
+/* Sidebar */
+nav {
+  background-color: #121212 !important;
+  border-right: 1px solid var(--cat-border) !important;
+}
+
+/* Main Content Area */
+main {
+  background-color: var(--cat-bg) !important;
+}
+
+/* Links */
+a {
+  color: var(--cat-accent);
+  text-decoration: none;
+  transition: opacity 0.2s;
+}
+
+a:hover {
+  text-decoration: underline !important;
+  opacity: 0.8;
+}
+
+/* Code Blocks - Pitch Black Terminal */
+pre, code, .code-block {
+  background-color: var(--cat-code-bg) !important;
+  border: 1px solid var(--cat-border) !important;
+  border-radius: 0px !important;
+  font-family: 'JetBrains Mono', monospace !important;
+  font-size: 13px !important;
+}
+
+/* Inline Code - Subtle Pop */
+:not(pre) > code {
+  background-color: var(--cat-inline-code-bg) !important;
+  color: #FFFFFF !important; /* White text for contrast */
+  padding: 2px 6px !important;
+  border-radius: 4px !important; /* Slight radius for readability */
+  font-weight: 500 !important;
+  border: 1px solid var(--cat-border) !important;
+}
+
+/* Search Bar */
+input[type="search"] {
+  background-color: #09090B !important;
+  border: 1px solid var(--cat-border) !important;
+  border-radius: 0px !important;
+  color: #FFFFFF !important;
+  font-family: 'JetBrains Mono', monospace !important;
+}
+
+/* Cards/Containers */
+.card, [class*="Card"] {
+  background-color: #202023 !important;
+  border: 1px solid var(--cat-border) !important;
+  border-radius: 0px !important;
+  transition: border-color 0.2s;
+}
+
+.card:hover, [class*="Card"]:hover {
+  border-color: var(--cat-muted) !important;
+}
+
+/* Remove rounded corners generally (except inline code/buttons if desired) */
+div, section, article {
+  border-radius: 0px !important;
+}
+
+/* Logo Styling */
+[class*="logo"], [class*="Logo"] {
   font-weight: 700 !important;
+  letter-spacing: -0.05em !important;
+  color: var(--cat-accent) !important;
+}
+
+/* Selection */
+::selection {
+  background-color: var(--cat-accent);
+  color: #000000;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+  background: var(--cat-bg);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--cat-border);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--cat-muted);
 }
