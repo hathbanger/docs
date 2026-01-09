@@ -65,9 +65,9 @@ pre, code, .code-block {
 /* Inline Code - Subtle Pop */
 :not(pre) > code {
   background-color: var(--cat-inline-code-bg) !important;
-  color: var(--cat-accent) !important; /* Green text for "ANSI" feel */
+  color: #FFFFFF !important; /* White text for contrast */
   padding: 2px 6px !important;
-  border-radius: 0px !important; /* Strict sharp edges */
+  border-radius: 4px !important; /* Slight radius for readability */
   font-weight: 500 !important;
   border: 1px solid var(--cat-border) !important;
 }
