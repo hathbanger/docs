@@ -1,12 +1,13 @@
-/* Feral Design System for Mintlify */
+/* Feral Design System for Mintlify - Developer Edition */
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap');
 
 :root {
-  --cat-bg: #050505;
-  --cat-fg: #F8F9FA;
-  --cat-accent: #00FF9D;
-  --cat-muted: #A1A1AA;
-  --cat-border: #27272A;
+  --cat-bg: #18181B; /* Zinc 900 - Muted Dark */
+  --cat-fg: #E4E4E7; /* Zinc 200 - Off-white text */
+  --cat-accent: #FFFFFF; /* Stark White */
+  --cat-muted: #71717A; /* Zinc 500 */
+  --cat-border: #27272A; /* Zinc 800 */
+  --cat-code-bg: #000000; /* Pitch Black for code */
 }
 
 /* Force dark mode background and font */
@@ -14,16 +15,23 @@ body, html {
   background-color: var(--cat-bg) !important;
   color: var(--cat-fg) !important;
   font-family: 'JetBrains Mono', monospace !important;
+  -webkit-font-smoothing: antialiased;
 }
 
 /* Typography Overrides */
-h1, h2, h3, h4, h5, h6, p, span, div, a, li, code {
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'JetBrains Mono', monospace !important;
+  color: #FFFFFF !important;
+  letter-spacing: -0.02em;
+}
+
+p, span, div, a, li {
   font-family: 'JetBrains Mono', monospace !important;
 }
 
 /* Sidebar */
 nav {
-  background-color: #09090B !important;
+  background-color: #121212 !important; /* Slightly darker than main */
   border-right: 1px solid var(--cat-border) !important;
 }
 
@@ -36,35 +44,51 @@ main {
 a {
   color: var(--cat-accent);
   text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.2s;
 }
 
 a:hover {
-  text-decoration: underline;
-  text-decoration-color: var(--cat-accent);
+  text-decoration: none !important;
+  border-bottom: 1px solid var(--cat-accent);
 }
 
-/* Code Blocks */
+/* Code Blocks - The Star of the Show */
 pre, code, .code-block {
-  background-color: #000000 !important;
+  background-color: var(--cat-code-bg) !important;
   border: 1px solid var(--cat-border) !important;
   border-radius: 0px !important;
   font-family: 'JetBrains Mono', monospace !important;
+  font-size: 13px !important;
+}
+
+/* Inline Code */
+:not(pre) > code {
+  background-color: #27272A !important;
+  color: #FFFFFF !important;
+  padding: 2px 4px !important;
+  border: none !important;
 }
 
 /* Search Bar */
 input[type="search"] {
-  background-color: #18181B !important;
+  background-color: #09090B !important;
   border: 1px solid var(--cat-border) !important;
   border-radius: 0px !important;
-  color: var(--cat-fg) !important;
+  color: #FFFFFF !important;
   font-family: 'JetBrains Mono', monospace !important;
 }
 
 /* Cards/Containers */
 .card, [class*="Card"] {
-  background-color: #0A0A0A !important;
+  background-color: #202023 !important; /* Slightly lighter than bg */
   border: 1px solid var(--cat-border) !important;
   border-radius: 0px !important;
+  transition: border-color 0.2s;
+}
+
+.card:hover, [class*="Card"]:hover {
+  border-color: #52525B !important;
 }
 
 /* Remove rounded corners globally */
@@ -76,10 +100,26 @@ input[type="search"] {
 [class*="logo"], [class*="Logo"] {
   font-weight: 700 !important;
   letter-spacing: -0.05em !important;
+  color: #FFFFFF !important;
 }
 
 /* Selection */
 ::selection {
-  background-color: var(--cat-accent);
-  color: #000;
+  background-color: #3F3F46;
+  color: #FFFFFF;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+  background: var(--cat-bg);
+}
+
+::-webkit-scrollbar-thumb {
+  background: #3F3F46;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #52525B;
 }
