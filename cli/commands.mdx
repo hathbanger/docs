@@ -5,7 +5,7 @@ description: "Complete reference for all httpcat-cli commands"
 
 ## Overview
 
-httpcat-cli provides 18+ commands for token operations, trading, and portfolio management. All commands support `--json` for automation and `--help` for detailed information.
+httpcat-cli provides 30+ commands for token operations, trading, transfers, portfolio management, and EVM development tools. All commands support `--json` for automation and `--help` for detailed information.
 
 ## Global Flags
 
@@ -238,27 +238,112 @@ httpcat swap 0x036CbD53842c5426634e7929541eC2318f3dCF7e 0x4200000000000000000000
 View or claim LP fees for graduated tokens.
 
 ```bash
-httpcat claim MTK --execute
+httpcat claim view MTK
+httpcat claim execute MTK
 ```
 
 **Usage:**
 ```bash
-httpcat claim <identifier> [options]
+httpcat claim [view|execute] [identifier]
 ```
 
-**Options:**
-- `-e, --execute` - Execute claim (default: view only)
-- `-A, --address <address>` - Caller address
+**Subcommands:**
+- `claim view [identifier]` - View accumulated fees (FREE)
+- `claim execute [identifier]` - Claim accumulated fees ($0.01)
 
-**Cost:** Free to view, gas fees for claiming
+**Cost:** $0.01 USDC to execute claims
 
 **Examples:**
 ```bash
-# View claimable fees
-httpcat claim MTK
+# View all claimable fees
+httpcat claim view
 
-# Claim fees
-httpcat claim 0x1234...402 --execute
+# View fees for specific token
+httpcat claim view MTK
+
+# Claim fees for token
+httpcat claim execute 0x1234...402
+
+# Legacy syntax still supported
+httpcat claim MTK
+```
+
+## Transfers
+
+### send eth
+
+Send native currency (ETH) to any address.
+
+```bash
+httpcat send eth 0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb 0.1
+```
+
+**Usage:**
+```bash
+httpcat send eth <to> <amount> [options]
+```
+
+**Arguments:**
+- `<to>` - Recipient address or account index (e.g., `0x...` or `1`)
+- `<amount>` - Amount in ETH
+
+**Options:**
+- `--dry-run` - Simulate without broadcasting
+- `--confirm` - Require confirmation prompt
+- `--wait` - Wait for transaction confirmation
+- `--nonce <number>` - Override nonce
+- `--gas-limit <number>` - Set gas limit
+- `--max-fee-per-gas <gwei>` - EIP-1559 max fee
+- `--max-priority-fee-per-gas <gwei>` - EIP-1559 priority fee
+
+**Examples:**
+```bash
+# Send ETH to address
+httpcat send eth 0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb 0.1
+
+# Send to account 1 with confirmation
+httpcat send eth 1 0.05 --confirm --wait
+
+# Simulate transfer
+httpcat send eth 0x... 0.1 --dry-run
+```
+
+---
+
+### send token
+
+Send ERC20 tokens to any address.
+
+```bash
+httpcat send token USDC 0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb 100
+```
+
+**Usage:**
+```bash
+httpcat send token <token> <to> <amount> [options]
+```
+
+**Arguments:**
+- `<token>` - Token address, symbol, or name
+- `<to>` - Recipient address or account index
+- `<amount>` - Amount to send
+
+**Options:**
+- `--decimals <number>` - Override token decimals
+- `--dry-run` - Simulate without broadcasting
+- `--confirm` - Require confirmation prompt
+- `--wait` - Wait for transaction confirmation
+
+**Examples:**
+```bash
+# Send USDC by symbol
+httpcat send token USDC 0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb 100
+
+# Send to account 1
+httpcat send token USDC 1 50
+
+# Send token by address
+httpcat send token 0x036CbD53842c5426634e7929541eC2318f3dCF7e 0x... 1000 --wait
 ```
 
 ## Portfolio
@@ -337,17 +422,17 @@ httpcat transactions --limit 100 --offset 100
 
 ---
 
-### balance
+### balances
 
-Check wallet balances (ETH, USDC, CAT).
+Check wallet balances (ETH, USDC, CAT, and all tokens).
 
 ```bash
-httpcat balance
+httpcat balances
 ```
 
 **Usage:**
 ```bash
-httpcat balance
+httpcat balances
 ```
 
 **Cost:** Free
@@ -355,9 +440,122 @@ httpcat balance
 **Returns:**
 - ETH balance (for gas fees)
 - USDC balance (for trading)
-- CAT balance (platform token, if graduated)
+- CAT balance (platform token)
+- All token holdings with current values
+
+---
+
+## Developer Tools
+
+### rpc
+
+Execute JSON-RPC calls via x402-protected proxy.
+
+```bash
+httpcat rpc --method eth_getBalance --params '["0x...","latest"]'
+```
+
+**Usage:**
+```bash
+httpcat rpc --method <method> --params <params>
+```
+
+**Options:**
+- `--method <method>` - RPC method (e.g., 'eth_getBalance')
+- `--params <params>` - Parameters as JSON array
+- `--id <id>` - Request ID (default: 1)
+
+**Cost:** $0.05 USDC per call
+
+**Examples:**
+```bash
+# Get account balance
+httpcat rpc --method eth_getBalance --params '["0x...","latest"]'
+
+# Get block number
+httpcat rpc --method eth_blockNumber --params '[]'
+
+# Get transaction receipt
+httpcat rpc --method eth_getTransactionReceipt --params '["0xtxhash..."]'
+```
+
+---
+
+### tools
+
+EVM development and interaction utilities.
+
+**Available tools:**
+
+| Tool | Description |
+|------|-------------|
+| `tools call <url>` | Call arbitrary x402-protected HTTP endpoints |
+| `tools rpc proxy` | Enhanced JSON-RPC proxy ($0.001) |
+| `tools rpc health` | Check RPC endpoint health ($0.001) |
+| `tools address` | Address utilities (validation, conversion) |
+| `tools abi` | ABI encoding/decoding |
+| `tools tx` | Transaction utilities |
+| `tools signature` | Signature utilities (EIP-712, etc.) |
+| `tools multicall` | Multicall operations |
+| `tools nonce` | Nonce management |
+| `tools gas` | Gas estimation utilities |
+| `tools key` | Key utilities |
+
+**Examples:**
+```bash
+# Call arbitrary x402 endpoint
+httpcat tools call https://api.example.com/entrypoint \
+  --method POST \
+  --body '{"param": "value"}'
+
+# Enhanced RPC proxy
+httpcat tools rpc proxy --method eth_call --params '[...]'
+
+# Check RPC health
+httpcat tools rpc health
+```
+
+<Note>
+Use `httpcat tools --help` to see all available utilities and `httpcat tools <utility> --help` for specific tool documentation.
+</Note>
+
+---
 
 ## Account Management
+
+### use
+
+Quick switch between accounts or environments.
+
+```bash
+httpcat use 1              # Switch to account 1
+httpcat use base-sepolia   # Switch to environment
+```
+
+**Usage:**
+```bash
+httpcat use <value>
+```
+
+**Arguments:**
+- `<value>` - Account index (integer) or environment name (string)
+
+**Examples:**
+```bash
+# Switch to account 1
+httpcat use 1
+
+# Switch to testnet
+httpcat use base-sepolia
+
+# Switch to mainnet
+httpcat use base
+
+# Switch to local development
+httpcat use local
+```
+
+---
 
 ### account
 
@@ -527,52 +725,77 @@ httpcat health
 
 ### config
 
-Manage configuration.
+Manage httpcat configuration settings.
 
-```bash
-httpcat config --show
-```
-
-**Usage:**
-```bash
-httpcat config [options]
-```
-
-**Options:**
-- `-s, --show` - Show current config
-- `-S, --set <key=value>` - Set config value
-- `-r, --reset` - Reset and reconfigure
+**Subcommands:**
+- `config setup` - Run interactive setup wizard
+- `config reset` - Reset configuration (clears all settings)
+- `config env` - Manage environments
+- `config account` - Manage accounts
+- `config completion [shell]` - Generate shell completion script
+- `config update` - Update httpcat CLI to latest version
 
 **Examples:**
 ```bash
-# Show configuration
-httpcat config --show
+# Run setup wizard
+httpcat config setup
 
 # Reset configuration
-httpcat config --reset
+httpcat config reset
 
-# Set specific value
-httpcat config --set enableAsciiArt=false
+# Manage environments
+httpcat config env list
+httpcat config env use base-sepolia
+
+# Manage accounts
+httpcat config account list
+httpcat config account add
+
+# Generate shell completion
+httpcat config completion bash > /etc/bash_completion.d/httpcat
+httpcat config completion zsh > ~/.zsh/completions/_httpcat
+
+# Update CLI
+httpcat config update
 ```
 
 ---
 
-### mcp-server
+### mcp
 
-Start Model Context Protocol server for AI assistant integration.
+Model Context Protocol integration for AI assistants.
+
+**Subcommands:**
+- `mcp install [llm-name]` - Install/update httpcat MCP server for LLM tools
+- `mcp start` - Start MCP server
+
+**mcp install**
+
+Install httpcat MCP server in your AI assistant configuration.
 
 ```bash
-httpcat mcp-server
+httpcat mcp install              # Interactive selection
+httpcat mcp install claude-cli   # Install for Claude
+httpcat mcp install --all        # Install for all detected LLMs
 ```
 
-**Usage:**
+**Supported LLMs:**
+- claude-cli / claude-desktop (Anthropic Claude)
+- cursor (Cursor IDE)
+- codex / openai (OpenAI Codex CLI)
+- gemini (Google Gemini CLI)
+- mcp-use, mcp-client (MCP CLI tools)
+- llm-tools-mcp / llm (LLM Tools MCP)
+
+**mcp start**
+
+Start the MCP server for direct integration.
+
 ```bash
-httpcat mcp-server
+httpcat mcp start
 ```
 
-Exposes all CLI commands as MCP tools for Cursor, Claude Desktop, and other MCP-compatible clients.
-
-See [MCP Server](/mcp/overview) documentation for integration guide.
+Exposes all CLI commands as MCP tools. See [MCP Server](/mcp/overview) documentation for integration guide.
 
 ---
 
@@ -648,6 +871,34 @@ Perfect for:
 - CI/CD pipelines
 - Automation
 - LLM/agent integration
+
+## Command Shortcuts
+
+Several convenience shortcuts are available for frequently used commands:
+
+| Shortcut | Maps to | Description |
+|----------|---------|-------------|
+| `buy` | `launchpad buy` | Buy tokens |
+| `sell` | `launchpad sell` | Sell tokens |
+| `swap` | `trade swap` | Execute swap |
+| `info` | `launchpad info` | Token information |
+| `list` | `launchpad list` | List tokens |
+| `positions` | `launchpad positions` | Your positions |
+| `transactions` | `portfolio transactions` | Transaction history |
+| `balances` | `portfolio balances` | Wallet balances |
+| `health` | `system health` | System health check |
+| `claim` | `launchpad claim` | View/claim fees |
+
+**Example:**
+```bash
+# These are equivalent
+httpcat buy MOON 0.10
+httpcat launchpad buy MOON 0.10
+
+# These are equivalent
+httpcat balances
+httpcat portfolio balances
+```
 
 ## Next Steps
 
