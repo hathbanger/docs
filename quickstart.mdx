@@ -180,6 +180,61 @@ httpcat> list --sort mcap
   </Accordion>
 </AccordionGroup>
 
+## Beyond Token Trading 🌟
+
+The launchpad is just the beginning. httpcat-cli also supports:
+
+### Universal Swaps
+
+Swap any ERC20 token with DEX aggregation and best price routing:
+
+```bash
+# Swap tokens with automatic best price routing
+httpcat swap 0xTokenIn 0xTokenOut 1000000
+
+# Works with any token, not just 402.cat tokens
+```
+
+### Agent Mode
+
+Natural language interface for any operation:
+
+```bash
+httpcat agent "What are the top tokens by market cap?"
+httpcat agent "Buy 0.10 of the newest token"
+```
+
+### MCP Integration
+
+Expose all operations to Claude, Cursor, or any MCP-compatible AI assistant:
+
+```bash
+httpcat mcp-server
+```
+
+See the [MCP documentation](/mcp/overview) for setup details.
+
+### More Coming
+
+New entrypoints for market data, risk management, and DeFi primitives are in development. The x402 protocol enables pay-per-call access to any service.
+
+<CardGroup cols={2}>
+  <Card
+    title="x402 Protocol"
+    icon="money-bill-wave"
+    href="/concepts/x402-protocol"
+  >
+    Universal payment rails for agent commerce ⚡
+  </Card>
+  <Card
+    title="API Reference"
+    icon="code"
+    href="/api-reference/overview"
+  >
+    Build custom applications with direct API access 🛠️
+  </Card>
+</CardGroup>
+
 ## Need Help? 🆘
 
 <CardGroup cols={2}>
@@ -191,11 +246,11 @@ httpcat> list --sort mcap
     Advanced configuration options ⚙️
   </Card>
   <Card
-    title="x402 Protocol"
-    icon="money-bill-wave"
-    href="/concepts/x402-protocol"
+    title="All Commands"
+    icon="terminal"
+    href="/cli/commands"
   >
-    Learn about micropayments ⚡
+    Complete CLI reference ⌨️
   </Card>
 </CardGroup>
 

@@ -41,24 +41,54 @@
             ]
           },
           {
-            "group": "SDK",
-            "pages": [
-              "sdk/overview",
-              "sdk/installation",
-              "sdk/server",
-              "sdk/client",
-              "sdk/referrals"
-            ]
-          },
-          {
             "group": "Core Concepts",
             "pages": [
+              "concepts/agent-infrastructure",
+              "concepts/entrypoints",
+              "concepts/x402-protocol",
+              "concepts/agent-commerce",
+              "concepts/universal-swap",
               "concepts/bonding-curve",
               "concepts/graduation",
               "concepts/fees",
-              "concepts/x402-protocol",
-              "concepts/token-lifecycle",
-              "concepts/chat"
+              "concepts/token-lifecycle"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Entrypoints",
+        "groups": [
+          {
+            "group": "Overview",
+            "pages": [
+              "entrypoints/introduction"
+            ]
+          },
+          {
+            "group": "Current Entrypoints",
+            "pages": [
+              "concepts/entrypoints"
+            ]
+          },
+          {
+            "group": "Using Entrypoints",
+            "pages": [
+              "cli/commands",
+              "mcp/tools",
+              "api-reference/overview"
+            ]
+          },
+          {
+            "group": "Building Entrypoints",
+            "pages": [
+              "entrypoints/building"
+            ]
+          },
+          {
+            "group": "What's Coming",
+            "pages": [
+              "entrypoints/coming-soon"
             ]
           }
         ]
@@ -77,7 +107,9 @@
           {
             "group": "Examples",
             "pages": [
-              "api-reference/examples/workflows"
+              "api-reference/examples/workflows",
+              "api-reference/examples/agent-trading",
+              "api-reference/examples/composability"
             ]
           },
           {

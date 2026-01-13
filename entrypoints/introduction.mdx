@@ -1,0 +1,488 @@
+---
+title: "Entrypoints Overview"
+description: "x402-powered capabilities for AI agents"
+---
+
+## What Are Entrypoints?
+
+Entrypoints are **x402-powered API endpoints** that provide specific capabilities to AI agents. Each entrypoint does one thing well, and agents combine them into sophisticated workflows.
+
+Think of entrypoints as **Lego blocks for agent operations**:
+- Each block is simple
+- Blocks snap together easily
+- Complex structures emerge from combination
+- Anyone can create new blocks
+
+**Current entrypoints:**
+- Token operations (create, buy, sell)
+- Universal swap (any ERC20 token)
+- Market data (listings, positions, prices)
+
+**Coming soon:**
+- Market intelligence
+- DeFi primitives (perps, predictions, lending)
+- Agent-to-agent services
+
+---
+
+## Why Entrypoints?
+
+### For Agents
+
+**Pay-per-call beats subscriptions:**
+- No monthly fees for unused services
+- Pay only for actual usage
+- Budget optimizes automatically
+- Scale up or down freely
+
+**Standard interface everywhere:**
+- Learn x402 once, works for all entrypoints
+- Same authentication pattern
+- Consistent JSON format
+- Predictable error handling
+
+**Composability unlocks sophistication:**
+- Chain multiple entrypoints together
+- Create complex workflows from simple parts
+- Each new entrypoint multiplies possibilities
+- Build once, reuse everywhere
+
+### For Builders
+
+**Monetize your services:**
+- Wrap any service as x402 entrypoint
+- Set your own pricing
+- Earn revenue per call
+- Scale to unlimited users
+
+**Network effects:**
+- Enable 10% referral fees
+- Users promote your service
+- More usage = more revenue
+- Platform handles discovery
+
+**Open infrastructure:**
+- No approval needed
+- No listing fees
+- Deploy anywhere
+- Keep your independence
+
+---
+
+## How Agents Use Entrypoints
+
+### Via CLI
+
+```bash
+# Token operations
+httpcat create "My Token" "MTK"
+httpcat buy MOON 0.10
+httpcat sell MOON 50%
+
+# Universal swap
+httpcat swap 0xUSDC 0xWETH 1000000
+
+# Market data
+httpcat list --sort mcap
+httpcat positions
+```
+
+### Via MCP (AI Assistants)
+
+```
+User: "What are the top 5 tokens by market cap?"
+Claude: [Calls token_list entrypoint with sort=mcap, limit=5]
+Claude: "Here are the top 5 tokens: ..."
+
+User: "Buy $0.10 of the newest one"
+Claude: [Calls token_buy entrypoint]
+Claude: "Purchased 150,000 MOON tokens for $0.10"
+```
+
+
+### Via API (Direct HTTP)
+
+```bash
+POST https://agent.402.cat/entrypoints/token_buy_0_10/invoke
+Headers:
+  PAYMENT-SIGNATURE: <x402_signature>
+  Content-Type: application/json
+Body:
+  {"identifier": "MOON", "amount": 0.10}
+```
+
+---
+
+## Current Entrypoints
+
+### Token Operations
+
+Create and trade tokens on the 402.cat bonding curve.
+
+<CardGroup cols={2}>
+  <Card title="token_create" icon="coins">
+    **Cost:** $0.01
+    Launch a new token with name, symbol, and metadata
+  </Card>
+  <Card title="token_buy" icon="arrow-trend-up">
+    **Cost:** Variable
+    Buy tokens on bonding curve (testnet: $0.05-$0.20, mainnet: $50-$200)
+  </Card>
+  <Card title="token_sell" icon="arrow-trend-down">
+    **Cost:** $0.01
+    Sell tokens by amount or percentage
+  </Card>
+  <Card title="token_info" icon="info-circle">
+    **Cost:** $0.0001
+    Get detailed token information and metrics
+  </Card>
+</CardGroup>
+
+**Use cases:**
+- Launch tokens programmatically
+- Execute automated trading strategies
+- Build market-making bots
+- Monitor token activity
+
+---
+
+### Universal Swap
+
+Swap any ERC20 token with DEX aggregation and best price routing.
+
+<CardGroup cols={2}>
+  <Card title="universal_swap" icon="shuffle">
+    **Cost:** Variable
+    Swap any token via Uniswap V4 routing with slippage protection
+  </Card>
+  <Card title="universal_swap_gasless" icon="gas-pump-slash">
+    **Cost:** Variable + fee
+    Gasless swap with facilitator sponsoring gas fees
+  </Card>
+</CardGroup>
+
+**Key features:**
+- Works with ANY ERC20 token on Base
+- Automatic best price routing
+- MEV protection via private mempool
+- Slippage tolerance configuration
+
+**Use cases:**
+- Portfolio rebalancing
+- Arbitrage execution
+- Multi-token strategies
+- Asset allocation
+
+**Proof point:** Universal swap demonstrates that x402 infrastructure works for any DeFi operation, not just 402.cat tokens.
+
+See [Universal Swap](/concepts/universal-swap) for details.
+
+---
+
+### Market Data
+
+Query token information and market state.
+
+<CardGroup cols={2}>
+  <Card title="token_list" icon="list">
+    **Cost:** Free
+    List all tokens with filtering and sorting
+  </Card>
+  <Card title="token_positions" icon="wallet">
+    **Cost:** Free
+    Get your current token holdings
+  </Card>
+  <Card title="token_details" icon="file-lines">
+    **Cost:** Free
+    Basic token information (name, symbol, address)
+  </Card>
+  <Card title="token_info (paid)" icon="chart-line">
+    **Cost:** $0.0001
+    Detailed metrics, prices, liquidity data
+  </Card>
+</CardGroup>
+
+**Use cases:**
+- Market monitoring and analysis
+- Opportunity detection
+- Portfolio tracking
+- Research and analytics
+
+---
+
+---
+
+## Composing Entrypoints
+
+The power of entrypoints comes from **composition**—combining multiple entrypoints into workflows.
+
+### Example 1: Automated Trading Bot
+
+```typescript
+// 1. Monitor market (free)
+const tokens = await client.invoke('token_list', {
+  sort: 'volume',
+  limit: 10
+});
+
+// 2. Analyze candidates ($0.001)
+for (const token of tokens) {
+  const info = await client.invoke('token_info', {
+    identifier: token.address
+  });
+
+  // 3. Execute if criteria met (variable)
+  if (meetsStrategy(info)) {
+    await client.invoke('token_buy_0_10', {
+      identifier: token.address,
+      amount: 0.10
+    });
+  }
+}
+
+// 4. Track positions (free)
+const positions = await client.invoke('token_positions');
+```
+
+**Four entrypoints. One strategy. All automatic.**
+
+### Example 2: Portfolio Rebalancer
+
+```typescript
+// 1. Get current holdings (free)
+const positions = await client.invoke('token_positions');
+
+// 2. Calculate imbalance
+const { sells, buys } = calculateRebalance(positions);
+
+// 3. Execute sells ($0.01 each)
+for (const sell of sells) {
+  await client.invoke('token_sell', {
+    identifier: sell.token,
+    amount: sell.amount
+  });
+}
+
+// 4. Execute buys via swap (variable)
+for (const buy of buys) {
+  await client.invoke('universal_swap', {
+    tokenIn: 'USDC',
+    tokenOut: buy.token,
+    amountIn: buy.amount
+  });
+}
+```
+
+**Two entrypoints. Complex portfolio management.**
+
+### Example 3: Token Launch + Marketing
+
+```typescript
+// 1. Create token ($0.01)
+const token = await client.invoke('token_create', {
+  name: 'My Token',
+  symbol: 'MTK',
+  website: 'https://mytoken.io'
+});
+
+// 2. Initial buy ($0.10)
+await client.invoke('token_buy_0_10', {
+  identifier: token.address,
+  amount: 0.10
+});
+```
+
+**Two entrypoints. Complete launch workflow.**
+
+---
+
+## Cost Structure
+
+### How Pricing Works
+
+Each entrypoint has its own pricing:
+- **Fixed cost:** Same price every call (e.g., $0.01)
+- **Variable cost:** Based on operation size (e.g., trading fees)
+- **Free:** No payment required (e.g., market data queries)
+
+**Example costs:**
+```
+Token creation: $0.01
+Token info: $0.0001
+Token buy: $0.05 - $200 (based on amount)
+Token sell: $0.01 + 1% trading fee
+Universal swap: Variable + gas + DEX fees
+Chat lease: $0.01 per 10 minutes
+```
+
+### Fee Distribution
+
+When you call a paid entrypoint:
+- **Entrypoint creator** gets 70-90% (for custom entrypoints)
+- **Platform** gets 10-20% (development and infrastructure)
+- **Referrer** gets 10% (if present)
+
+**Example: $0.10 token buy**
+```
+$0.10 → Trade execution
+1% trading fee → $0.001
+Platform fee → CAT buyback
+Referrer (10%) → $0.01 if referral code used
+```
+
+See [Fee Structure](/concepts/fees) for complete details.
+
+---
+
+## Discovery
+
+### Finding Entrypoints
+
+**Via API:**
+```bash
+GET https://agent.402.cat/entrypoints
+```
+
+**Via CLI:**
+```bash
+httpcat entrypoints list
+httpcat entrypoints search "market data"
+```
+
+**Via MCP:**
+```
+User: "What entrypoints are available for trading?"
+Claude: [Lists trading-related entrypoints]
+```
+
+### Categories
+
+Entrypoints organized by purpose:
+- **Token Operations** - Create, buy, sell, info
+- **DeFi Access** - Swaps, lending, liquidity
+- **Market Intelligence** - Data, analytics, signals (coming soon)
+- **Risk Management** - Monitoring, alerts (coming soon)
+- **Agent Services** - Custom entrypoints (coming soon)
+
+**Coming:** Enhanced discovery with search, filtering, reputation scores, and usage statistics.
+
+---
+
+## Building Your Own
+
+Any developer can create x402 entrypoints. No approval needed. No listing fees.
+
+**What you can build:**
+- Market data feeds
+- Trading signals
+- Risk analysis
+- Custom strategies
+- Integration bridges
+- Specialized tools
+
+**Revenue model:**
+- Set your own pricing
+- Enable 10% referral fees
+- Earn per call
+- Scale to unlimited users
+
+**The pattern:**
+1. Build a service (any HTTP API)
+2. Add x402 authentication
+3. Deploy anywhere (Railway, Render, Vercel, etc.)
+4. Earn from usage
+
+See [Building Entrypoints](/entrypoints/building) for complete guides.
+
+---
+
+## What's Coming
+
+New entrypoints in development across multiple categories:
+
+**Market Intelligence:**
+- Opportunity detection
+- Insider activity tracking
+- Token scoring
+- Sentiment analysis
+
+**DeFi Primitives:**
+- Perpetuals aggregation (400+ markets)
+- Prediction markets
+- Lending and borrowing
+- Liquidity provision
+
+**Agent-to-Agent Services:**
+- Strategy marketplaces
+- Signal sharing
+- Custom model endpoints
+- Coordination tools
+
+See [Coming Soon](/entrypoints/coming-soon) for details.
+
+---
+
+## Key Concepts
+
+### Pay-Per-Call
+
+Agents pay for exactly what they use, when they use it. No subscriptions. No minimums.
+
+**Benefit:** Budget optimizes automatically. High-value operations get more spend. Low-value operations get less.
+
+### Composability
+
+Each entrypoint is a primitive. Agents compose primitives into sophisticated workflows.
+
+**Benefit:** As entrypoints grow, possibilities multiply exponentially. 5 entrypoints = dozens of workflows. 50 entrypoints = thousands.
+
+### Standard Interface
+
+All entrypoints use x402 authentication. Learn once, works everywhere.
+
+**Benefit:** Agents don't need custom integration per service. Same pattern for all operations.
+
+### Network Effects
+
+Referral system (10%) incentivizes users to promote entrypoints they use.
+
+**Benefit:** Valuable entrypoints grow organically through word-of-mouth and agent recommendations.
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card
+    title="Try Entrypoints"
+    icon="rocket"
+    href="/quickstart"
+  >
+    Get started with httpcat-cli
+  </Card>
+  <Card
+    title="Build Your Own"
+    icon="code"
+    href="/entrypoints/building"
+  >
+    Create custom entrypoints
+  </Card>
+  <Card
+    title="Coming Soon"
+    icon="sparkles"
+    href="/entrypoints/coming-soon"
+  >
+    Future capabilities
+  </Card>
+  <Card
+    title="Deep Dive"
+    icon="book"
+    href="/concepts/entrypoints"
+  >
+    Technical details
+  </Card>
+</CardGroup>
+
+<Tip>
+Entrypoints are infrastructure, not features. Each one is simple. The sophistication comes from composition. As the ecosystem grows, agents become more capable without code changes—they just discover and use new entrypoints.
+</Tip>

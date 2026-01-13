@@ -5,36 +5,51 @@ description: "Token creation and trading platform powered by x402 micropayments"
 
 ## 😺 What is 402.cat?
 
-402.cat is a token launch platform where anyone can create and trade tokens on a bonding curve. Built on Base, powered by the x402 micropayment protocol, and optimized for AI agent interaction.
+402.cat is agent infrastructure for crypto commerce. Starting with a token launchpad, we're building the economic layer that lets any AI agent access DeFi, market data, and financial tools through simple pay-per-call entrypoints.
+
+Built on Base, powered by the x402 micropayment protocol, and designed for seamless AI agent interaction.
 
 <Warning>
 **🔥 Platform Token (CAT)**: Every token graduation creates automatic buy pressure on the CAT platform token! When tokens graduate at $69K market cap, **100% of that USDC is used to buy CAT from the market** before creating liquidity pools. More successful tokens = more CAT demand. [Learn more →](/concepts/graduation#platform-token-cat-)
 </Warning>
 
-<CardGroup cols={2}>
+<CardGroup cols={3}>
   <Card
-    title="Create Tokens"
+    title="Token Launchpad"
     icon="coins"
   >
-    Launch tokens on a bonding curve with just $0.01 USDC
+    Create and trade tokens on bonding curves, automatic graduation to Uniswap V4
   </Card>
   <Card
-    title="Trade Instantly"
-    icon="chart-line"
+    title="Universal Swap"
+    icon="shuffle"
   >
-    Buy and sell with automatic micropayments via x402 protocol
+    DEX aggregation for any ERC20 token with MEV protection
   </Card>
   <Card
-    title="Graduate to Uniswap"
-    icon="rocket"
-  >
-    Tokens automatically graduate to Uniswap V4 at market cap threshold
-  </Card>
-  <Card
-    title="AI-Powered"
+    title="Agent Tools"
     icon="robot"
   >
-    Full MCP server support for Claude, Cursor, and other AI assistants
+    CLI and MCP server optimized for AI agents and automation
+  </Card>
+  <Card
+    title="x402 Payment Rails"
+    icon="bolt"
+  >
+    Pay-per-call micropayments, no accounts or API keys required
+  </Card>
+  <Card
+    title="Referral System"
+    icon="network-wired"
+  >
+    Earn 10% on all agent activity you generate
+  </Card>
+  <Card
+    title="Coming Soon"
+    icon="sparkles"
+    href="/entrypoints/coming-soon"
+  >
+    More entrypoints in development for market data and DeFi access
   </Card>
 </CardGroup>
 
@@ -102,7 +117,7 @@ Expose httpcat functionality to AI assistants through the Model Context Protocol
     icon="toolbox"
     href="/mcp/tools"
   >
-    11 tools for creating, trading, and chatting 💬
+    Tools for creating, trading, and market data
   </Card>
 </CardGroup>
 
@@ -146,13 +161,6 @@ Understand how 402.cat works under the hood. 🔧
   >
     From creation to graduation 🔄
   </Card>
-  <Card
-    title="Chat System"
-    icon="comments"
-    href="/concepts/chat"
-  >
-    Token-specific and general chat rooms 💬
-  </Card>
 </CardGroup>
 
 ## 🔗 API Reference
@@ -175,25 +183,25 @@ Build applications and AI agents with the 402.cat API. 🤖
     x402 micropayment authentication
   </Card>
   <Card
-    title="Token Operations"
-    icon="coins"
-    href="/api-reference/tokens/create"
+    title="Entrypoints"
+    icon="plug"
+    href="/api-reference/entrypoints"
   >
-    Create, buy, sell, and query tokens
+    All available entrypoints for agents
   </Card>
   <Card
-    title="Trading"
-    icon="exchange"
-    href="/api-reference/trading/universal-buy"
+    title="Agent Trading"
+    icon="robot"
+    href="/api-reference/examples/agent-trading"
   >
-    Universal swaps and MEV-protected trades
+    Complete trading strategies and examples
   </Card>
   <Card
-    title="Examples"
-    icon="code"
-    href="/api-reference/examples/workflows"
+    title="Composability"
+    icon="diagram-project"
+    href="/api-reference/examples/composability"
   >
-    Complete workflows and integration patterns
+    How to compose entrypoints into workflows
   </Card>
 </CardGroup>
 

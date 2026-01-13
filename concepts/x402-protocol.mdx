@@ -9,6 +9,19 @@ description: "Understanding the micropayment protocol powering 402.cat"
 
 Think of it as "pay-per-use" for APIs, perfect for AI agents and automated trading.
 
+## Universal Payment Rails
+
+x402 isn't just the payment system for 402.cat—it's a **universal protocol** that enables any agent to pay for any HTTP service.
+
+**Key Insight:** The same x402 payment flow that powers token trading on 402.cat can power:
+- Market data feeds
+- DeFi operations (swaps, lending, perps)
+- Custom analytics services
+- AI model endpoints
+- Any HTTP API
+
+This makes x402 the foundation for **agent-to-agent commerce**. When services speak x402, agents can discover and pay for them automatically—no accounts, no API keys, just wallets and micropayments.
+
 ## How It Works
 
 <Steps>
@@ -247,24 +260,15 @@ httpcat buy MOON 0.10
 
 ### Building Your Own Client
 
-If building a custom client:
+If building a custom client, implement the x402 flow:
 
-```typescript
-import { x402Client } from '@402/client';
+1. Make initial request
+2. Receive 402 response with payment details
+3. Sign EIP-3009 authorization
+4. Retry request with PAYMENT-SIGNATURE header
+5. Receive successful response
 
-const client = new x402Client({
-  privateKey: process.env.PRIVATE_KEY,
-  network: 'eip155:84532'
-});
-
-// Automatic payment handling
-const response = await client.post('/entrypoints/token_buy_0_10/invoke', {
-  identifier: 'MOON',
-  amount: 0.10
-});
-
-// CLI handles 402 → sign → retry automatically
-```
+The httpcat CLI demonstrates this pattern and can serve as a reference implementation.
 
 ## Security
 
@@ -344,6 +348,45 @@ def trade_token(token, amount):
 
     return response.json()
 ```
+
+## Beyond 402.cat
+
+While 402.cat demonstrates x402 for token operations and DeFi access, **the protocol is designed for any service to adopt**.
+
+### Building x402 Services
+
+Any developer can create x402-powered endpoints by implementing the x402 payment verification flow:
+
+1. Receive request with PAYMENT-SIGNATURE header
+2. Verify EIP-3009 authorization signature
+3. Validate payment amount and nonce
+4. Execute service logic
+5. Settle payment on-chain
+
+Your service becomes instantly accessible to any x402 agent once deployed.
+
+### The Growing x402 Ecosystem
+
+Services adopting x402 include:
+- 402.cat (token operations, swaps, market data)
+- Custom entrypoints built by developers
+- Future: market intelligence, risk management, strategy sharing
+
+**The vision:** A marketplace where agents can discover and pay for services automatically—no human intervention, no account setup, just wallets talking to wallets.
+
+## The Agent Commerce Vision
+
+x402 enables a future where:
+
+**Agents are economic actors.** They don't just analyze and recommend—they execute with real financial consequence. An agent that can identify an arbitrage opportunity AND capture it. An agent that can analyze a token AND buy it.
+
+**Economic activity happens at machine speed.** No clicking through UIs. No managing API keys across dozens of services. Agents compose entrypoints into workflows, paying for exactly what they use.
+
+**Constraints create alignment.** An agent with no budget is an agent with no accountability. An agent that must pay for each action—and can run out of funds—is an agent that learns to prioritize. Money becomes the alignment mechanism.
+
+**Agent-to-agent payments unlock new markets.** One agent provides a service (signals, data, execution). Another agent pays to use it. No platforms. No middlemen. Just economic exchange at the speed of HTTP.
+
+402.cat is proving this works. Starting with token operations, expanding to universal DeFi access, and building toward a future where any agent can access any financial capability through simple pay-per-call entrypoints.
 
 ## Comparison to Alternatives
 

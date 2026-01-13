@@ -1,0 +1,506 @@
+---
+title: "Agent Commerce"
+description: "Economic models for AI agent activity"
+---
+
+## What is Agent Commerce?
+
+Agent commerce is economic activity conducted by AI agents rather than humans. Agents don't just analyze and recommend—they **execute, pay, and earn** autonomously.
+
+**Traditional commerce:**
+- Human clicks buttons
+- Human enters credit card
+- Human manages subscriptions
+- Human tracks expenses
+
+**Agent commerce:**
+- Agent makes API calls
+- Agent signs micropayments
+- Agent pays per use
+- Agent operates within budget
+
+The shift from human commerce to agent commerce requires new infrastructure. Agents can't fill out signup forms. They can't click through checkout flows. They need programmatic payments and machine-native interfaces.
+
+402.cat provides this infrastructure through x402 micropayments and composable entrypoints.
+
+## How Agents Transact
+
+### Pay-Per-Call Model
+
+Agents don't subscribe to services. They **pay for exactly what they use, when they use it**.
+
+**Traditional model:**
+```
+$99/month subscription
+└─ Use it 10 times or 1000 times, same cost
+└─ Manage renewals, billing, cancellations
+└─ Multiple API keys across services
+```
+
+**Agent commerce model:**
+```
+$0.0001 - $0.10 per call
+└─ Pay only for actual usage
+└─ No subscriptions to manage
+└─ One wallet works everywhere
+```
+
+**Benefit:** Agents optimize spending automatically. High-value operations get more budget. Low-value operations get less.
+
+### Gasless Transactions
+
+Agents operate on user budgets, not their own. They shouldn't need to:
+- Hold ETH for gas
+- Calculate gas prices
+- Handle transaction failures
+- Retry with higher gas
+
+**x402 handles this:** Facilitators sponsor gas. Users sign authorizations. Settlement happens in the background.
+
+See [x402 Protocol](/concepts/x402-protocol) for technical details.
+
+### Composable Workflows
+
+Agents don't use one service at a time. They **compose multiple entrypoints** into workflows:
+
+**Example: Trading agent**
+1. Monitor market data (market_data entrypoint)
+2. Identify opportunity (agent logic)
+3. Execute trade (token_buy entrypoint)
+4. Track position (positions entrypoint)
+5. Send alert (chat entrypoint)
+
+Five entrypoints. One workflow. All automatic. All pay-per-call.
+
+## The Referral System
+
+### How It Works
+
+The 402.cat referral system creates economic incentives for growing the agent ecosystem:
+
+**When you refer a user:**
+- They include your wallet address in the `X-402-Referrer` header
+- You earn **10% of all fees** they generate
+- Fees include both x402 costs and trading fees
+- Revenue is passive and ongoing
+
+**Example:**
+```
+User you referred buys $100 of tokens
+├─ x402 entrypoint cost: $100
+├─ Trading fee (1%): $1.00
+├─ Total fees: $101.00
+└─ Your cut (10%): $10.10
+```
+
+### Why This Creates Growth
+
+**Network effects at the entrypoint level:**
+
+Traditional platforms: "Use my service, I get paid for that service."
+
+402.cat: "Bring users, earn from ALL their activity across ALL entrypoints."
+
+**Implications:**
+- Influencers earn from follower activity (ongoing revenue)
+- Developers earn from users of their apps (passive income)
+- Communities earn from member activity (aligned incentives)
+- Agents can refer other agents (machine-to-machine growth)
+
+### Claiming Referral Rewards
+
+Check your earned fees:
+
+```bash
+httpcat fees
+```
+
+Claim when ready:
+
+```bash
+httpcat claim
+```
+
+**Minimum:** Accumulate fees before claiming to optimize gas costs.
+
+See [Fee Structure](/concepts/fees) for complete details.
+
+## Agent-to-Agent Payments
+
+### The Vision
+
+x402 enables agents to pay agents directly:
+
+**Agent A** provides valuable signals:
+- Wraps signals as x402 entrypoint
+- Sets price per call ($0.01)
+- Enables referral fees (10%)
+
+**Agent B** consumes signals:
+- Discovers entrypoint via x402scan
+- Calls when needed
+- Pays automatically via x402
+
+**Agent C** recommends Agent A:
+- Shares Agent A's entrypoint with referral code
+- Earns 10% of all Agent B's usage
+- Passive revenue from network growth
+
+**No platform intermediary needed.** Just wallets, signatures, and HTTP calls.
+
+### Current State
+
+Agent-to-agent payments work today through custom entrypoints:
+
+**You can:**
+- Build an x402 service
+- Set your pricing
+- Enable referral rewards (10%)
+- Earn from usage
+
+**Agents can:**
+- Discover your service
+- Pay per call automatically
+- Compose with other services
+- Refer others for commission
+
+See [Building Entrypoints](/entrypoints/building) for implementation guides.
+
+### Future: Service Marketplaces
+
+**Coming:**
+- Enhanced discovery (search, filter, rankings)
+- Reputation systems (usage stats, reviews)
+- Service composition tools (chain entrypoints)
+- Analytics dashboards (revenue, usage, trends)
+
+**The goal:** Make it trivial for agents to find, use, and monetize services.
+
+## Economic Models for Agents
+
+### 1. Consumer Agents (Pay for Services)
+
+Agents that consume entrypoints to provide value to users:
+
+**Examples:**
+- Trading bot (uses token_buy, token_sell, market_data)
+- Portfolio manager (uses universal_swap, positions)
+- Alert system (uses chat, market_data)
+
+**Economics:**
+- User funds agent wallet
+- Agent spends on entrypoints
+- User gets value (trades, insights, automation)
+- Efficient: pay-per-call means no wasted subscription fees
+
+### 2. Producer Agents (Earn from Services)
+
+Agents that provide valuable services to other agents:
+
+**Examples:**
+- Signal provider (market opportunities)
+- Data aggregator (cross-platform analytics)
+- Risk analyzer (position monitoring)
+- Strategy generator (backtested approaches)
+
+**Economics:**
+- Build service, wrap as x402 entrypoint
+- Other agents pay to use it
+- Earn revenue per call
+- Scale: unlimited agents can subscribe
+
+### 3. Hybrid Agents (Consume and Produce)
+
+Agents that both use services and provide services:
+
+**Examples:**
+- Advanced trading agent
+  - Consumes: market data, execution entrypoints
+  - Produces: successful strategies as entrypoints
+- Portfolio intelligence
+  - Consumes: price feeds, analytics
+  - Produces: rebalancing signals as service
+
+**Economics:**
+- Net positive if service value > entrypoint costs
+- Network effects: more usage → more data → better service
+- Flywheel: revenue funds improvements
+
+### 4. Referral Agents (Earn from Network Growth)
+
+Agents that connect users and services:
+
+**Examples:**
+- Discovery agent (recommends relevant entrypoints)
+- Aggregator agent (curates best services by category)
+- Community agent (coordinates group activity)
+
+**Economics:**
+- Earn 10% from all referred activity
+- No service development needed
+- Value is curation and distribution
+- Passive recurring revenue
+
+## Use Cases
+
+### Trading Agent
+
+**What it does:**
+- Monitors market data continuously
+- Identifies opportunities using AI
+- Executes trades automatically
+- Manages risk and positions
+
+**Entrypoints used:**
+- `token_list` (free) - Monitor all tokens
+- `token_info` ($0.0001) - Deep analysis on candidates
+- `token_buy` ($0.05-$200) - Execute purchases
+- `token_sell` ($0.01) - Take profits or cut losses
+- `positions` (free) - Track portfolio
+
+**Economics:**
+```
+Cost per trade cycle:
+- Monitor 100 tokens: Free
+- Analyze 10 candidates: $0.001
+- Execute 1 trade: $0.10 + 1% fee
+- Total: ~$0.11 per opportunity
+
+If win rate > 11%, agent is profitable
+```
+
+### Market Intelligence Agent
+
+**What it does:**
+- Aggregates data across sources
+- Detects insider activity
+- Identifies trending tokens
+- Provides signals to other agents
+
+**Entrypoints used:**
+- `token_list` (free) - Get all tokens
+- `token_info` ($0.0001) - Analyze each
+- Custom entrypoint - Sell signals to others
+
+**Economics:**
+```
+Cost to generate signals:
+- Monitor: Free
+- Analysis: $0.10/batch
+- Total cost: $0.10
+
+Revenue from selling signals:
+- Price per signal: $0.01
+- If 20+ agents subscribe, profitable
+```
+
+### Portfolio Management Agent
+
+**What it does:**
+- Analyzes user holdings
+- Recommends rebalancing
+- Executes swaps automatically
+- Tracks performance
+
+**Entrypoints used:**
+- `positions` (free) - Current holdings
+- `universal_swap` (variable) - Rebalance
+- `token_info` ($0.0001) - Asset analysis
+
+**Economics:**
+```
+Managed portfolio: $10,000
+Rebalancing: 1x/week
+Cost per rebalance: $5 (swaps + fees)
+Monthly cost: $20
+
+If alpha > 0.2%, service pays for itself
+```
+
+### Community Coordination Agent
+
+**What it does:**
+- Manages token-specific chat
+- Shares updates and announcements
+- Coordinates community actions
+- Monitors sentiment
+
+**Entrypoints used:**
+- `chat_lease` ($0.01) - Access for 10 minutes
+- `chat_message` ($0.0001) - Post updates
+- `chat_history` (free) - Monitor conversation
+
+**Economics:**
+```
+Active community management:
+- Lease: $0.01 every 10 minutes
+- Messages: $0.0001 each
+- Daily cost: ~$2-5
+
+Value: community engagement, token awareness
+ROI: depends on token success
+```
+
+## The Network Effect
+
+### How It Compounds
+
+**More agents → More usage**
+- Each agent uses multiple entrypoints
+- More sophisticated workflows
+- Higher transaction volume
+
+**More usage → More revenue**
+- Entrypoint creators earn more
+- Referrers earn more
+- Platform grows faster
+
+**More revenue → More development**
+- New entrypoints built
+- Better infrastructure
+- Enhanced capabilities
+
+**More capabilities → More agents**
+- More use cases possible
+- Agents can do more
+- Network becomes essential
+
+### Referrals Amplify Growth
+
+**Traditional growth:**
+```
+User signs up → Uses platform → Growth = linear
+```
+
+**Referral-driven growth:**
+```
+User signs up → Refers others → They refer others → Growth = exponential
+User uses platform → Generates fees → Referrer earns → Incentive to refer more
+```
+
+**Agent-to-agent referrals:**
+```
+Agent A builds service → Agent B uses it → Agent A earns
+Agent A refers Agent C to Agent B → Agent A earns from C's usage too
+Network effect: Every connection creates value for multiple parties
+```
+
+## Building for Agent Commerce
+
+### If You're a Developer
+
+**Build entrypoints that agents will pay for:**
+
+1. Identify valuable services (data, execution, intelligence)
+2. Wrap as x402 entrypoint with authentication
+3. Set competitive pricing
+4. Enable referral rewards (10%)
+5. List on x402scan for discovery
+
+**Revenue potential:**
+```
+Service cost: $0.01/call
+Users: 100 agents
+Usage: 10 calls/day each
+Daily revenue: $10
+Monthly revenue: $300
+Annual revenue: $3,650
+
+As usage scales: $36,500 at 1000 agents
+```
+
+### If You're an Agent Builder
+
+**Create agents that provide value through composition:**
+
+1. Identify user need (trading, portfolio, intelligence)
+2. Compose relevant entrypoints into workflow
+3. Add your logic and intelligence
+4. Charge users via subscription or performance fee
+5. Use referral codes to reduce costs
+
+**Unit economics:**
+```
+User pays you: $100/month
+Your entrypoint costs: $20/month
+Your profit: $80/month
+Your referral revenue: $10/month (from referred users)
+Net profit: $90/month per user
+```
+
+### If You're a Community Builder
+
+**Use referrals to monetize your audience:**
+
+1. Get your referral code
+2. Share 402.cat and entrypoints
+3. Earn 10% of all activity you generate
+4. Revenue is passive and ongoing
+
+**Potential:**
+```
+Followers who use platform: 1000
+Average monthly activity: $100
+Your cut (10%): $10,000/month
+```
+
+## What's Coming
+
+**Enhanced discovery:**
+- Search entrypoints by category
+- Filter by cost, usage, reputation
+- Smart recommendations based on agent needs
+
+**Reputation systems:**
+- Track entrypoint reliability
+- Usage statistics and reviews
+- Performance metrics
+
+**Composition tools:**
+- Visual workflow builders
+- Entrypoint chaining
+- Complex strategy templates
+
+**Analytics:**
+- Revenue dashboards
+- Usage tracking
+- Referral performance
+
+**The vision:** A thriving marketplace where agents discover, use, and monetize services frictionlessly.
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card
+    title="Agent Infrastructure"
+    icon="building"
+    href="/concepts/agent-infrastructure"
+  >
+    The full infrastructure stack
+  </Card>
+  <Card
+    title="Entrypoints"
+    icon="plug"
+    href="/concepts/entrypoints"
+  >
+    Explore composable building blocks
+  </Card>
+  <Card
+    title="Build Services"
+    icon="code"
+    href="/entrypoints/building"
+  >
+    Create x402 entrypoints
+  </Card>
+  <Card
+    title="Fee Structure"
+    icon="percent"
+    href="/concepts/fees"
+  >
+    How referrals and fees work
+  </Card>
+</CardGroup>
+
+<Tip>
+Agent commerce isn't about replacing human commerce—it's about enabling economic activity that wasn't possible before. Machines transacting with machines at API speed, paying for exactly what they use, earning from the value they create.
+</Tip>

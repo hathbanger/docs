@@ -1,0 +1,415 @@
+---
+title: "Universal Swap"
+description: "DEX aggregation for any ERC20 token"
+---
+
+## Beyond Token Launch
+
+The universal swap entrypoint is **proof that 402.cat is infrastructure**, not just a token launchpad.
+
+The same x402 payment rails that power token trading also power universal swaps. Same authentication. Same pay-per-call model. Different capability.
+
+**What this proves:**
+- Infrastructure generalizes beyond specific use cases
+- Agents can access any DeFi operation through x402
+- Composability enables sophisticated workflows
+- The launchpad is the first use case, not the only one
+
+Universal swap demonstrates the architecture scales from token operations to full DeFi access.
+
+## What is Universal Swap?
+
+**Universal swap** lets agents exchange any ERC20 token for any other ERC20 token using Uniswap V4 routing and DEX aggregation.
+
+**Key features:**
+- Works with ANY token on Base, not just 402.cat tokens
+- Automatic best price routing across pools
+- Slippage protection and price impact limits
+- MEV resistance through private mempool
+- Gasless option available (facilitator sponsors gas)
+
+**Use cases:**
+- Portfolio rebalancing (swap holdings to target allocation)
+- Arbitrage execution (capture price differences)
+- Multi-token strategies (enter/exit positions)
+- Asset allocation (move between tokens)
+- Automated market making (manage liquidity)
+
+## How It Works
+
+### Standard Swap
+
+**Agent calls universal_swap entrypoint:**
+
+```bash
+httpcat swap 0xTokenIn 0xTokenOut 1000000
+```
+
+**Behind the scenes:**
+1. Agent signs x402 payment authorization
+2. Request goes to 402.cat API with payment
+3. API routes through Uniswap V4
+4. Best price found across liquidity pools
+5. Trade executed on-chain
+6. Result returned to agent
+
+**Cost:**
+- x402 entrypoint fee (based on swap size)
+- Gas fee (agent pays)
+- DEX fees (typically 0.3%)
+
+### Gasless Swap
+
+**Agent calls gasless swap entrypoint:**
+
+```bash
+httpcat swap 0xTokenIn 0xTokenOut 1000000 --gasless
+```
+
+**Difference:**
+- Facilitator sponsors gas fees
+- Agent doesn't need ETH
+- Slightly higher fee to cover gas + facilitation
+
+**When to use:**
+- Agent operates on tight budget
+- No ETH available for gas
+- Want predictable costs
+- Prefer convenience over minimum cost
+
+## Technical Details
+
+### Uniswap V4 Integration
+
+Universal swap uses **Uniswap V4** for optimal routing:
+
+**Benefits:**
+- Singleton contract (reduced gas costs)
+- Hook architecture (custom logic per pool)
+- Native ETH support (no wrapping needed)
+- Flash accounting (lower gas consumption)
+
+**Routing:**
+- Multi-hop paths if needed (A → B → C)
+- Considers pool depth and fees
+- Minimizes price impact
+- Optimizes for best execution
+
+### Slippage Protection
+
+Agents can specify maximum slippage tolerance:
+
+```typescript
+await client.invoke('universal_swap', {
+  tokenIn: '0xTokenIn',
+  tokenOut: '0xTokenOut',
+  amountIn: '1000000',
+  slippage: 0.5  // 0.5% maximum slippage
+});
+```
+
+**If price moves beyond tolerance:**
+- Transaction reverts
+- No funds lost
+- Agent can retry with adjusted parameters
+
+### MEV Protection
+
+**Problem:** Public mempool makes trades visible to MEV bots who can front-run.
+
+**Solution:** Private mempool routing through facilitators.
+
+**How it works:**
+1. Agent submits swap through x402
+2. Facilitator receives request privately
+3. Facilitator executes via private mempool
+4. Trade settles without public visibility
+
+**Benefit:** Reduces sandwich attacks and adverse price movements.
+
+## Composing with Other Entrypoints
+
+Universal swap becomes powerful when composed with other entrypoints:
+
+### Example 1: Portfolio Rebalancing
+
+**Goal:** Maintain 50/50 split between two tokens
+
+```typescript
+// Check current positions
+const positions = await client.invoke('positions');
+
+// Calculate imbalance
+const { fromToken, toToken, amount } = calculateRebalance(positions);
+
+// Execute swap
+await client.invoke('universal_swap', {
+  tokenIn: fromToken,
+  tokenOut: toToken,
+  amountIn: amount
+});
+
+// Verify new allocation
+const updated = await client.invoke('positions');
+```
+
+**Three entrypoints. One workflow. All automatic.**
+
+### Example 2: Arbitrage Bot
+
+**Goal:** Capture price differences across markets
+
+```typescript
+// Monitor token on 402.cat
+const info402 = await client.invoke('token_info', {
+  identifier: 'MOON'
+});
+
+// Check external DEX price via swap quote
+const quote = await client.invoke('universal_swap_quote', {
+  tokenIn: 'MOON',
+  tokenOut: 'USDC',
+  amountIn: info402.balance
+});
+
+// If profitable, execute
+if (quote.price > info402.price * 1.01) {
+  await client.invoke('token_sell', { identifier: 'MOON', amount: 'all' });
+  // Profits captured in USDC
+}
+```
+
+**Two entrypoints + logic = arbitrage strategy.**
+
+### Example 3: DCA Strategy
+
+**Goal:** Dollar-cost average into a token
+
+```typescript
+// Weekly schedule
+setInterval(async () => {
+  // Swap $100 USDC → Target token
+  await client.invoke('universal_swap', {
+    tokenIn: 'USDC',
+    tokenOut: targetToken,
+    amountIn: '100000000'  // $100 USDC (6 decimals)
+  });
+
+  // Log position
+  const positions = await client.invoke('positions');
+  logPerformance(positions);
+}, 7 * 24 * 60 * 60 * 1000);  // Weekly
+```
+
+**One entrypoint. Recurring execution. Automatic accumulation.**
+
+## Cost Structure
+
+### Standard Swap Costs
+
+```
+Example: Swap $1000 USDC → TOKEN
+
+Costs:
+├─ x402 entrypoint fee: ~$1-5 (based on swap size)
+├─ Gas fee: ~$0.10-0.50 (Base L2 is cheap)
+└─ DEX fees: ~$3.00 (0.3% typical)
+
+Total: ~$4-8 per $1000 swap
+```
+
+### Gasless Swap Costs
+
+```
+Example: Swap $1000 USDC → TOKEN (gasless)
+
+Costs:
+├─ x402 entrypoint fee: ~$1-5 (based on swap size)
+├─ Facilitation fee: ~$1 (covers gas + service)
+└─ DEX fees: ~$3.00 (0.3% typical)
+
+Total: ~$5-9 per $1000 swap
+```
+
+**Tradeoff:** Gasless costs slightly more but removes need for ETH and simplifies agent budgeting.
+
+## Using Universal Swap
+
+### Via CLI
+
+```bash
+# Standard swap
+httpcat swap 0xTokenIn 0xTokenOut 1000000
+
+# With slippage protection
+httpcat swap 0xTokenIn 0xTokenOut 1000000 --slippage 0.5
+
+# Gasless
+httpcat swap 0xTokenIn 0xTokenOut 1000000 --gasless
+
+# Get quote first
+httpcat swap 0xTokenIn 0xTokenOut 1000000 --quote
+```
+
+### Via MCP (AI Assistants)
+
+```
+User: "Swap 1000 USDC to WETH"
+Claude: [Calls universal_swap entrypoint]
+Claude: "Swapped 1000 USDC for 0.34 WETH at $2941 per WETH"
+```
+
+
+### Via API
+
+```bash
+POST https://agent.402.cat/entrypoints/universal_swap/invoke
+Headers: PAYMENT-SIGNATURE: <x402_signature>
+Body: {
+  "tokenIn": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+  "tokenOut": "0x4200000000000000000000000000000000000006",
+  "amountIn": "1000000000",
+  "slippage": 0.5
+}
+```
+
+## Supported Tokens
+
+Universal swap works with **any ERC20 token on Base** that has liquidity on Uniswap V4.
+
+**Common tokens:**
+- USDC (Base's native stablecoin)
+- WETH (Wrapped Ethereum)
+- DAI (Dai stablecoin)
+- 402.cat tokens (after graduation)
+- Any token with Uniswap V4 liquidity
+
+**Check token support:**
+```bash
+httpcat swap 0xTokenIn 0xTokenOut 1000000 --quote
+```
+
+If quote succeeds, swap is supported.
+
+## Comparing to Token Operations
+
+| Feature | Token Operations | Universal Swap |
+|---------|------------------|----------------|
+| **What** | 402.cat tokens on bonding curve | Any ERC20 token |
+| **Pricing** | Bonding curve formula | DEX market prices |
+| **Liquidity** | Internal to 402.cat | Uniswap V4 pools |
+| **Use case** | New token launches | Established tokens |
+| **Integration** | x402 entrypoint | x402 entrypoint |
+| **Payment** | Pay-per-call | Pay-per-call |
+
+**Key insight:** Both use the same infrastructure (x402), proving the payment rails generalize across DeFi operations.
+
+## Why This Matters
+
+### 1. Proves Infrastructure Scales
+
+Universal swap demonstrates that x402 isn't limited to token operations. The same payment pattern works for:
+- Token trading (already live)
+- Universal swaps (already live)
+- Perps and derivatives (coming)
+- Lending and borrowing (coming)
+- Prediction markets (coming)
+- Any DeFi operation (future)
+
+**Architecture lesson:** Build the foundation right, then extend capabilities.
+
+### 2. Enables Complex Workflows
+
+Agents that can trade 402.cat tokens AND swap arbitrary tokens can:
+- Enter positions via token_buy
+- Exit to stablecoins via token_sell
+- Rebalance to other assets via universal_swap
+- Manage portfolio across entire DeFi ecosystem
+
+**Composability unlocks sophistication.**
+
+### 3. Shows Platform Thinking
+
+A launchpad would only support its own tokens. An infrastructure platform supports **any token, any operation, any workflow**.
+
+Universal swap signals: "402.cat is building infrastructure, not just an app."
+
+### 4. Prepares for Future Entrypoints
+
+If x402 works for token operations and universal swaps, it will work for:
+- Perps aggregation (trade futures across venues)
+- Prediction markets (bet on outcomes)
+- Lending protocols (borrow and lend)
+- Options and derivatives (structured products)
+
+**The pattern is proven. Now scale it.**
+
+## What's Coming
+
+### More DeFi Entrypoints
+
+**In development:**
+- Perps aggregation (400+ markets across venues)
+- Prediction markets (Polymarket, others)
+- Lending and borrowing (Aave, Compound)
+- Liquidity provision (automated LP management)
+
+**Same pattern:**
+- x402 payment authentication
+- Pay-per-call pricing
+- Composable with existing entrypoints
+- Accessible to any agent
+
+### Enhanced Swap Features
+
+**Coming improvements:**
+- Multi-path optimization (split trades across routes)
+- Gas estimation API (predict costs before execution)
+- Historical analytics (track swap performance)
+- Advanced order types (limit orders, TWAP)
+
+### Cross-Chain Swaps
+
+**Future expansion:**
+- Bridge integration (move assets across chains)
+- Cross-chain routing (find best prices anywhere)
+- Unified liquidity (access all chains through one interface)
+
+**The vision:** Any agent can access any asset on any chain through x402 entrypoints.
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card
+    title="Try Universal Swap"
+    icon="rocket"
+    href="/quickstart"
+  >
+    Get started with httpcat-cli
+  </Card>
+  <Card
+    title="Entrypoints Overview"
+    icon="plug"
+    href="/concepts/entrypoints"
+  >
+    Explore all available entrypoints
+  </Card>
+  <Card
+    title="Agent Infrastructure"
+    icon="building"
+    href="/concepts/agent-infrastructure"
+  >
+    Understand the full stack
+  </Card>
+  <Card
+    title="Build Your Own"
+    icon="code"
+    href="/entrypoints/building"
+  >
+    Create custom entrypoints
+  </Card>
+</CardGroup>
+
+<Tip>
+Universal swap isn't just a feature—it's proof that x402 infrastructure scales beyond token operations to full DeFi access. This is the foundation for agent-native financial capabilities.
+</Tip>

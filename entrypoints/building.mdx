@@ -1,0 +1,607 @@
+---
+title: "Building Entrypoints"
+description: "Create x402-powered services that any agent can use"
+---
+
+## What You Can Build
+
+Any HTTP service can become an x402 entrypoint. If agents would pay to use it, you can build it.
+
+**Examples of valuable entrypoints:**
+- Market data feeds (prices, volume, liquidity)
+- Trading signals (entry/exit recommendations)
+- Risk analysis (position monitoring, exposure tracking)
+- Custom strategies (backtested approaches)
+- Analytics services (token scoring, sentiment analysis)
+- Integration bridges (connect to external APIs)
+- Specialized tools (tax calculation, reporting, etc.)
+
+**The pattern:**
+1. Build a service that provides value
+2. Implement x402 payment verification
+3. Deploy and list for discovery
+4. Earn revenue per call
+
+No approval needed. No listing fees. Permissionless infrastructure.
+
+---
+
+## x402 Payment Flow
+
+### How It Works
+
+```
+1. Agent → Makes request
+2. Server → Returns 402 Payment Required
+3. Agent → Signs EIP-3009 authorization
+4. Agent → Retries with PAYMENT-SIGNATURE header
+5. Server → Verifies signature
+6. Server → Executes service logic
+7. Server → Returns result
+8. Facilitator → Settles payment on-chain (async)
+```
+
+### Implementation Steps
+
+**1. Return 402 on unpaid requests**
+
+```javascript
+app.post('/entrypoints/my_service/invoke', async (req, res) => {
+  // Check for payment signature
+  if (!req.headers['payment-signature']) {
+    return res.status(402).json({
+      cost: '0.01',  // $0.01 USDC
+      facilitator: 'facilitator.payai.network',
+      nonce: generateNonce()
+    });
+  }
+
+  // Continue to verification...
+});
+```
+
+**2. Verify EIP-3009 signature**
+
+```javascript
+const payment = JSON.parse(
+  Buffer.from(req.headers['payment-signature'], 'base64').toString()
+);
+
+// Verify signature components
+const isValid = verifyEIP3009Authorization({
+  from: payment.authorization.from,
+  to: payment.authorization.to,
+  value: payment.authorization.value,
+  validAfter: payment.authorization.validAfter,
+  validBefore: payment.authorization.validBefore,
+  nonce: payment.authorization.nonce,
+  v: payment.authorization.v,
+  r: payment.authorization.r,
+  s: payment.authorization.s
+});
+
+if (!isValid) {
+  return res.status(401).json({ error: 'Invalid payment signature' });
+}
+```
+
+**3. Execute your service logic**
+
+```javascript
+// Payment verified, execute service
+const result = await myService(req.body);
+
+res.json({
+  success: true,
+  data: result
+});
+```
+
+**4. Settlement happens automatically**
+
+The facilitator handles on-chain settlement asynchronously. You don't need to manage this—just verify the signature and execute your service.
+
+---
+
+## Pricing Strategies
+
+### Fixed Price Per Call
+
+Simple and predictable:
+
+```javascript
+return res.status(402).json({
+  cost: '0.01',  // $0.01 per call
+  facilitator: 'facilitator.payai.network',
+  nonce: generateNonce()
+});
+```
+
+**Use when:**
+- Cost per call is constant
+- Simple pricing is important
+- You want predictable revenue
+
+**Examples:**
+- Token info lookup: $0.0001
+- Signal generation: $0.01
+- Risk analysis: $0.05
+
+### Variable Pricing
+
+Price based on request parameters:
+
+```javascript
+const basePrice = 0.01;
+const complexity = req.body.depth || 1;
+const cost = (basePrice * complexity).toString();
+
+return res.status(402).json({
+  cost,
+  facilitator: 'facilitator.payai.network',
+  nonce: generateNonce()
+});
+```
+
+**Use when:**
+- Different operations have different costs
+- Complexity varies per request
+- You want to optimize for usage
+
+**Examples:**
+- Data fetch: $0.001 per 100 records
+- Analysis depth: $0.01 × depth level
+- Compute time: $0.001 per second
+
+---
+
+## Revenue Model
+
+### Direct Revenue
+
+You earn every time someone calls your entrypoint:
+
+```
+Pricing: $0.01 per call
+Daily calls: 1,000
+Daily revenue: $10
+Monthly revenue: $300
+Annual revenue: $3,650
+```
+
+**Scales with usage.** More agents using your service = more revenue.
+
+### Referral Revenue
+
+Include referral support in your payment flow to enable 10% referral fees:
+
+```javascript
+// When verifying payment, track referrer if present
+const referrer = req.headers['x-402-referrer'];
+
+if (referrer) {
+  // 90% to you, 10% to referrer
+  await trackReferral(referrer, cost * 0.10);
+}
+```
+
+**Network effect:** Users have incentive to promote your entrypoint because they earn from referrals.
+
+---
+
+## Response Format
+
+### Success Response
+
+```javascript
+res.json({
+  success: true,
+  data: {
+    // Your response data
+    result: "...",
+    metadata: {}
+  }
+});
+```
+
+### Error Response
+
+```javascript
+res.status(400).json({
+  success: false,
+  error: {
+    code: "INVALID_INPUT",
+    message: "Token address is required"
+  }
+});
+```
+
+### Standard Error Codes
+
+```
+Client errors (4xx):
+- INVALID_INPUT: Bad request parameters
+- INSUFFICIENT_PAYMENT: Payment too low
+- RATE_LIMIT_EXCEEDED: Too many requests
+- UNAUTHORIZED: Invalid auth
+
+Server errors (5xx):
+- INTERNAL_ERROR: Something went wrong
+- SERVICE_UNAVAILABLE: Temporary issue
+- TIMEOUT: Request took too long
+```
+
+---
+
+## Security Best Practices
+
+### 1. Validate All Inputs
+
+```javascript
+if (!req.body.tokenAddress || !isValidAddress(req.body.tokenAddress)) {
+  return res.status(400).json({
+    success: false,
+    error: { code: 'INVALID_INPUT', message: 'Valid token address required' }
+  });
+}
+```
+
+### 2. Implement Rate Limiting
+
+```javascript
+const rateLimit = require('express-rate-limit');
+
+const limiter = rateLimit({
+  windowMs: 60 * 1000,  // 1 minute
+  max: 100,  // 100 requests per minute
+  message: { error: { code: 'RATE_LIMIT_EXCEEDED' }}
+});
+
+app.use('/entrypoints/', limiter);
+```
+
+### 3. Handle Timeouts Gracefully
+
+```javascript
+const timeout = 30000;  // 30 seconds
+
+const controller = new AbortController();
+const timeoutId = setTimeout(() => controller.abort(), timeout);
+
+try {
+  const result = await myService(req.body, { signal: controller.signal });
+  clearTimeout(timeoutId);
+  res.json({ success: true, data: result });
+} catch (error) {
+  if (error.name === 'AbortError') {
+    return res.status(504).json({
+      success: false,
+      error: { code: 'TIMEOUT' }
+    });
+  }
+  throw error;
+}
+```
+
+### 4. Log Usage and Errors
+
+```javascript
+console.log({
+  timestamp: new Date().toISOString(),
+  user: payment.authorization.from,
+  endpoint: 'my_service',
+  cost: payment.authorization.value,
+  success: true
+});
+```
+
+---
+
+## Example Implementation
+
+### Token Scoring Service
+
+```javascript
+const express = require('express');
+const app = express();
+
+app.use(express.json());
+
+app.post('/entrypoints/token_score/invoke', async (req, res) => {
+  // 1. Check for payment
+  if (!req.headers['payment-signature']) {
+    return res.status(402).json({
+      cost: '0.001',
+      facilitator: 'facilitator.payai.network',
+      nonce: crypto.randomBytes(32).toString('hex')
+    });
+  }
+
+  // 2. Verify payment (simplified)
+  const payment = JSON.parse(
+    Buffer.from(req.headers['payment-signature'], 'base64').toString()
+  );
+
+  if (!verifyPayment(payment)) {
+    return res.status(401).json({ error: 'Invalid payment' });
+  }
+
+  // 3. Validate input
+  const { tokenAddress } = req.body;
+  if (!tokenAddress) {
+    return res.status(400).json({
+      success: false,
+      error: { code: 'INVALID_INPUT' }
+    });
+  }
+
+  // 4. Execute service logic
+  try {
+    const liquidity = await getLiquidity(tokenAddress);
+    const volume = await getVolume(tokenAddress);
+    const holders = await getHolders(tokenAddress);
+    const age = await getTokenAge(tokenAddress);
+
+    const score = calculateScore({ liquidity, volume, holders, age });
+
+    res.json({
+      success: true,
+      data: {
+        score,  // 0-100
+        metrics: { liquidity, volume, holders, age },
+        rating: score > 80 ? 'strong' : score > 50 ? 'moderate' : 'weak'
+      }
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: { code: 'INTERNAL_ERROR' }
+    });
+  }
+});
+
+app.listen(3000);
+```
+
+**Revenue potential:**
+- Price: $0.001 per score
+- 10,000 calls/day from research bots
+- Revenue: $10/day = $300/month
+
+---
+
+## Testing
+
+### Local Testing
+
+```bash
+# Start your entrypoint
+node server.js
+
+# Test with httpcat CLI (handles payment automatically)
+httpcat invoke http://localhost:3000/entrypoints/token_score/invoke \
+  --data '{"tokenAddress": "0x..."}'
+```
+
+### Testnet Deployment
+
+Test on Base Sepolia testnet before mainnet:
+
+```javascript
+// Configure for testnet
+const network = 'eip155:84532';  // Base Sepolia
+```
+
+**Get test USDC:**
+1. Visit [Circle Faucet](https://faucet.circle.com/)
+2. Configure httpcat for testnet: `httpcat config`
+3. Test your entrypoint
+
+---
+
+## Deployment
+
+### Railway
+
+```bash
+npm install -g @railway/cli
+railway init
+railway up
+```
+
+**Pros:** Simple, autoscaling, HTTPS included
+**Cost:** ~$5-20/month
+
+### Render
+
+```yaml
+# render.yaml
+services:
+  - type: web
+    name: my-entrypoint
+    env: node
+    buildCommand: npm install
+    startCommand: npm start
+```
+
+**Pros:** Free tier available, easy deployment
+**Cost:** Free - $25/month
+
+### Fly.io
+
+```bash
+flyctl launch
+flyctl deploy
+```
+
+**Pros:** Edge deployment, fast globally
+**Cost:** ~$5-15/month
+
+---
+
+## Discovery
+
+Once deployed, your entrypoint is discoverable:
+
+**Via API:**
+```bash
+GET https://agent.402.cat/entrypoints
+```
+
+**Via CLI:**
+```bash
+httpcat entrypoints list
+```
+
+**Via MCP:**
+```
+User: "What entrypoints are available for market data?"
+Claude: [Searches and returns list]
+```
+
+**Coming soon:** Enhanced discovery with search, filtering, and reputation scores.
+
+---
+
+## Monitoring
+
+### Basic Logging
+
+```javascript
+let dailyRevenue = 0;
+let dailyCalls = 0;
+
+// Track each successful call
+dailyRevenue += parseFloat(payment.authorization.value);
+dailyCalls += 1;
+
+// Daily summary
+setInterval(() => {
+  console.log(`Daily stats: ${dailyCalls} calls, $${dailyRevenue} revenue`);
+  dailyRevenue = 0;
+  dailyCalls = 0;
+}, 24 * 60 * 60 * 1000);
+```
+
+### Error Tracking
+
+```javascript
+try {
+  const result = await myService(req.body);
+  res.json({ success: true, data: result });
+} catch (error) {
+  console.error({
+    timestamp: new Date().toISOString(),
+    endpoint: 'my_service',
+    error: error.message,
+    user: payment.authorization.from
+  });
+
+  res.status(500).json({
+    success: false,
+    error: { code: 'INTERNAL_ERROR' }
+  });
+}
+```
+
+---
+
+## Best Practices
+
+### 1. Start Simple
+
+Don't over-engineer. Ship a working entrypoint, then iterate based on usage.
+
+**Minimum viable entrypoint:**
+- Does one thing well
+- Clear pricing
+- Good error messages
+- Basic logging
+
+### 2. Price Appropriately
+
+**Guidelines:**
+- Data lookups: $0.0001 - $0.001
+- Simple operations: $0.001 - $0.01
+- Complex analysis: $0.01 - $0.10
+- Heavy compute: $0.10+
+
+Test pricing with real usage and adjust.
+
+### 3. Enable Referrals
+
+10% referral fee creates growth incentives with minimal cost to you.
+
+**Network effect:** Users promote your entrypoint to earn referral revenue.
+
+### 4. Document Your Service
+
+Agents need to know:
+- What your entrypoint does
+- What parameters it accepts
+- What it returns
+- How much it costs
+- Error codes and meanings
+
+**Better docs = more usage.**
+
+### 5. Monitor and Iterate
+
+Track:
+- Usage patterns
+- Error rates
+- Response times
+- Revenue trends
+
+**Use data to improve.**
+
+---
+
+## Reference Implementation
+
+The httpcat CLI is open source and demonstrates the complete x402 payment flow. Use it as a reference for implementing your own services.
+
+**Key components:**
+- EIP-3009 signature generation
+- Payment verification
+- Error handling
+- Retry logic
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card
+    title="x402 Protocol"
+    icon="bolt"
+    href="/concepts/x402-protocol"
+  >
+    Deep dive on payment verification
+  </Card>
+  <Card
+    title="Current Entrypoints"
+    icon="plug"
+    href="/concepts/entrypoints"
+  >
+    See what others have built
+  </Card>
+  <Card
+    title="Coming Soon"
+    icon="sparkles"
+    href="/entrypoints/coming-soon"
+  >
+    Future entrypoint categories
+  </Card>
+  <Card
+    title="API Reference"
+    icon="book"
+    href="/api-reference/overview"
+  >
+    Complete API documentation
+  </Card>
+</CardGroup>
+
+<Tip>
+The best entrypoints solve real problems that agents face. Start with a pain point you've experienced, build a solution, and implement x402 verification. If it's valuable to you, it's probably valuable to others.
+</Tip>

@@ -1,0 +1,733 @@
+---
+title: "Agent Trading Examples"
+description: "Build sophisticated trading strategies by composing entrypoints"
+---
+
+## Overview
+
+This guide shows how to build complete trading agents by composing multiple entrypoints into workflows. Each example demonstrates real patterns agents use to execute strategies automatically.
+
+**Key insight:** Each entrypoint is a primitive. Sophisticated strategies emerge from composing primitives, not from complex individual operations.
+
+---
+
+## Example 1: Automated Trading Bot
+
+**Strategy:** Monitor new tokens, analyze quality, buy promising ones automatically.
+
+### The Workflow
+
+```
+1. Monitor new token launches (SSE stream or polling)
+2. For each new token:
+   a. Get detailed info (token_info entrypoint)
+   b. Analyze metrics (local logic)
+   c. If passes criteria, execute buy (token_buy entrypoint)
+3. Track positions (positions entrypoint)
+4. Check exit conditions periodically
+5. Sell when criteria met (token_sell entrypoint)
+```
+
+### Implementation (CLI)
+
+```bash
+#!/bin/bash
+
+# Configuration
+MIN_LIQUIDITY=1000
+MAX_MCAP=10000
+
+# Monitor loop
+while true; do
+  # Get recent tokens
+  TOKENS=$(httpcat list --sort created --limit 10 --json)
+
+  for TOKEN in $(echo "$TOKENS" | jq -r '.tokens[].address'); do
+    # Get detailed info ($0.0001 per call)
+    INFO=$(httpcat info "$TOKEN" --json)
+
+    # Extract metrics
+    LIQUIDITY=$(echo "$INFO" | jq -r '.liquidity')
+    MCAP=$(echo "$INFO" | jq -r '.marketCap')
+
+    # Check criteria
+    if [ "$LIQUIDITY" -gt "$MIN_LIQUIDITY" ] && [ "$MCAP" -lt "$MAX_MCAP" ]; then
+      echo "Found promising token: $TOKEN"
+
+      # Execute buy ($0.10)
+      httpcat buy "$TOKEN" 0.10
+
+      # Log trade
+      echo "$(date): Bought $TOKEN" >> trades.log
+    fi
+  done
+
+  # Wait before next scan
+  sleep 60
+done
+```
+
+### Implementation (API)
+
+```javascript
+const axios = require('axios');
+
+const BASE_URL = 'https://agent.402.cat';
+const MIN_LIQUIDITY = 1000;
+const MAX_MCAP = 10000;
+
+async function tradingBot() {
+  while (true) {
+    // Get recent tokens (free)
+    const { data } = await axios.get(`${BASE_URL}/tokens?sort=created&limit=10`);
+
+    for (const token of data.tokens) {
+      // Get detailed info (paid: $0.0001)
+      const info = await invokeEntrypoint('token_info', {
+        identifier: token.address
+      });
+
+      // Analyze metrics
+      if (info.liquidity > MIN_LIQUIDITY && info.marketCap < MAX_MCAP) {
+        console.log(`Found promising token: ${token.address}`);
+
+        // Execute buy (paid: $0.10)
+        await invokeEntrypoint('token_buy_0_10', {
+          identifier: token.address,
+          amount: 0.10
+        });
+
+        // Log trade
+        console.log(`${new Date()}: Bought ${token.address}`);
+      }
+    }
+
+    // Wait before next scan
+    await sleep(60000);
+  }
+}
+
+// Helper to invoke entrypoints with x402 payment
+async function invokeEntrypoint(entrypoint, params) {
+  // 1. Make initial request
+  try {
+    const response = await axios.post(
+      `${BASE_URL}/entrypoints/${entrypoint}/invoke`,
+      params
+    );
+    return response.data;
+  } catch (error) {
+    if (error.response?.status === 402) {
+      // 2. Payment required - sign and retry
+      const payment = error.response.data;
+      const signature = await signPayment(payment);
+
+      // 3. Retry with payment
+      const response = await axios.post(
+        `${BASE_URL}/entrypoints/${entrypoint}/invoke`,
+        params,
+        {
+          headers: {
+            'PAYMENT-SIGNATURE': signature
+          }
+        }
+      );
+      return response.data;
+    }
+    throw error;
+  }
+}
+
+tradingBot();
+```
+
+### Cost Analysis
+
+```
+Per cycle (10 tokens analyzed):
+- List tokens: Free
+- Token info (10 tokens): 10 × $0.0001 = $0.001
+- Buy (avg 1 per cycle): $0.10 + 1% fee = $0.101
+
+Cost per cycle: ~$0.102
+Cycles per day (1 per minute): 1,440
+Daily cost: ~$147
+
+If 10% of buys are winners: ROI depends on gains
+```
+
+---
+
+## Example 2: Market Making Agent
+
+**Strategy:** Maintain liquidity by buying low and selling high with tight spreads.
+
+### The Workflow
+
+```
+1. Monitor token price (token_info entrypoint)
+2. Calculate current spread
+3. If spread > threshold:
+   a. Buy on bonding curve (token_buy)
+   b. Wait for price increase
+   c. Sell for profit (token_sell)
+4. Repeat with profits
+```
+
+### Implementation
+
+```javascript
+const TARGET_TOKEN = '0x...';
+const SPREAD_THRESHOLD = 0.02;  // 2%
+const TRADE_SIZE = 0.10;
+
+async function marketMaker() {
+  while (true) {
+    // Get current price (paid: $0.0001)
+    const info = await invokeEntrypoint('token_info', {
+      identifier: TARGET_TOKEN
+    });
+
+    const { buyPrice, sellPrice } = info;
+    const spread = (buyPrice - sellPrice) / sellPrice;
+
+    console.log(`Spread: ${(spread * 100).toFixed(2)}%`);
+
+    if (spread > SPREAD_THRESHOLD) {
+      // Buy at low price
+      await invokeEntrypoint('token_buy_0_10', {
+        identifier: TARGET_TOKEN,
+        amount: TRADE_SIZE
+      });
+
+      console.log(`Bought at ${buyPrice}`);
+
+      // Wait for price to increase
+      let currentPrice = buyPrice;
+      while (currentPrice < buyPrice * 1.02) {
+        await sleep(10000);  // Check every 10 seconds
+
+        const updated = await invokeEntrypoint('token_info', {
+          identifier: TARGET_TOKEN
+        });
+        currentPrice = updated.sellPrice;
+      }
+
+      // Sell for profit
+      await invokeEntrypoint('token_sell', {
+        identifier: TARGET_TOKEN,
+        amount: 'all'
+      });
+
+      console.log(`Sold at ${currentPrice}, profit: ${currentPrice - buyPrice}`);
+    }
+
+    await sleep(60000);  // Check spread every minute
+  }
+}
+
+marketMaker();
+```
+
+### Cost Analysis
+
+```
+Per trade cycle:
+- Monitor price: $0.0001 × 6 = $0.0006 (1 per 10 sec for 1 min)
+- Buy: $0.10 + 1% = $0.101
+- Sell: $0.01 + 1% = ~$0.011
+
+Cost per cycle: ~$0.113
+Profit target: 2%+ on $0.10 = $0.002+
+Net per cycle: Depends on capture rate
+```
+
+---
+
+## Example 3: Portfolio Rebalancing Agent
+
+**Strategy:** Maintain target allocation across multiple tokens using swaps.
+
+### The Workflow
+
+```
+1. Get current positions (positions entrypoint)
+2. Calculate current allocation
+3. Compare to target allocation
+4. Execute swaps to rebalance (universal_swap entrypoint)
+5. Repeat on schedule (daily, weekly, etc.)
+```
+
+### Implementation
+
+```javascript
+const TARGET_ALLOCATION = {
+  'USDC': 0.50,   // 50%
+  'WETH': 0.30,   // 30%
+  'TOKEN': 0.20   // 20%
+};
+
+async function rebalancePortfolio() {
+  // Get current positions (free)
+  const positions = await axios.get(`${BASE_URL}/positions`);
+
+  // Calculate total value
+  let totalValue = 0;
+  const current = {};
+
+  for (const pos of positions.data) {
+    const value = pos.balance * pos.price;
+    current[pos.symbol] = value;
+    totalValue += value;
+  }
+
+  // Calculate current allocation
+  const currentAllocation = {};
+  for (const symbol in current) {
+    currentAllocation[symbol] = current[symbol] / totalValue;
+  }
+
+  console.log('Current allocation:', currentAllocation);
+
+  // Calculate required swaps
+  const swaps = [];
+  for (const symbol in TARGET_ALLOCATION) {
+    const target = TARGET_ALLOCATION[symbol];
+    const currentPct = currentAllocation[symbol] || 0;
+    const diff = target - currentPct;
+
+    if (Math.abs(diff) > 0.05) {  // Rebalance if >5% off target
+      const targetValue = totalValue * target;
+      const currentValue = current[symbol] || 0;
+      const swapAmount = targetValue - currentValue;
+
+      swaps.push({
+        from: swapAmount < 0 ? symbol : 'USDC',
+        to: swapAmount < 0 ? 'USDC' : symbol,
+        amount: Math.abs(swapAmount)
+      });
+    }
+  }
+
+  // Execute swaps
+  for (const swap of swaps) {
+    console.log(`Swapping ${swap.amount} ${swap.from} → ${swap.to}`);
+
+    await invokeEntrypoint('universal_swap', {
+      tokenIn: getTokenAddress(swap.from),
+      tokenOut: getTokenAddress(swap.to),
+      amountIn: swap.amount.toString(),
+      slippage: 0.5  // 0.5% max slippage
+    });
+  }
+
+  console.log('Rebalancing complete');
+}
+
+// Run daily
+setInterval(rebalancePortfolio, 24 * 60 * 60 * 1000);
+```
+
+### Cost Analysis
+
+```
+Per rebalancing:
+- Get positions: Free
+- Swaps (avg 3): 3 × $5 = $15
+
+Daily: $15 (if daily rebalancing)
+Monthly: ~$450
+
+Value: Maintains target allocation, reduces risk
+```
+
+---
+
+## Example 4: Arbitrage Bot
+
+**Strategy:** Exploit price differences between bonding curve and external DEXs.
+
+### The Workflow
+
+```
+1. Get token price on 402.cat (token_info)
+2. Get token price on Uniswap (universal_swap quote)
+3. If price difference > threshold:
+   a. Buy on cheaper venue
+   b. Sell on expensive venue
+   c. Profit from spread
+```
+
+### Implementation
+
+```javascript
+const ARB_THRESHOLD = 0.01;  // 1% minimum arbitrage
+
+async function arbitrageBot() {
+  while (true) {
+    // Get all graduated tokens (free)
+    const tokens = await axios.get(`${BASE_URL}/tokens?graduated=true`);
+
+    for (const token of tokens.data) {
+      // Get 402.cat price (paid: $0.0001)
+      const info402 = await invokeEntrypoint('token_info', {
+        identifier: token.address
+      });
+
+      // Get Uniswap price via swap quote (free quote)
+      const quoteUni = await axios.post(
+        `${BASE_URL}/entrypoints/universal_swap/quote`,
+        {
+          tokenIn: token.address,
+          tokenOut: 'USDC',
+          amountIn: '1000000'  // 1M tokens
+        }
+      );
+
+      const price402 = info402.sellPrice;
+      const priceUni = quoteUni.data.price;
+
+      const spread = (priceUni - price402) / price402;
+
+      if (spread > ARB_THRESHOLD) {
+        console.log(`Arbitrage found: ${token.symbol}`);
+        console.log(`402.cat: $${price402}, Uniswap: $${priceUni}`);
+        console.log(`Spread: ${(spread * 100).toFixed(2)}%`);
+
+        // Buy on 402.cat (cheaper)
+        await invokeEntrypoint('token_buy_0_10', {
+          identifier: token.address,
+          amount: 0.10
+        });
+
+        // Sell on Uniswap (more expensive)
+        await invokeEntrypoint('universal_swap', {
+          tokenIn: token.address,
+          tokenOut: 'USDC',
+          amountIn: 'all',  // Sell all just bought
+          slippage: 0.5
+        });
+
+        console.log('Arbitrage executed');
+      }
+    }
+
+    await sleep(30000);  // Check every 30 seconds
+  }
+}
+
+arbitrageBot();
+```
+
+### Cost Analysis
+
+```
+Per token checked:
+- 402.cat price: $0.0001
+- Uniswap quote: Free
+
+Per arbitrage execution:
+- Buy on 402.cat: $0.10 + 1% = $0.101
+- Swap on Uniswap: Gas + DEX fees ≈ $1-3
+
+Cost: ~$1-3 per execution
+Profit: 1%+ on $0.10 = $0.001+
+ROI: Depends on spread captured
+```
+
+---
+
+## Example 5: Momentum Trading Agent
+
+**Strategy:** Buy tokens showing strong momentum, ride the trend, exit on reversal.
+
+### The Workflow
+
+```
+1. Monitor all tokens (token_list)
+2. Calculate momentum indicators
+3. Buy tokens with strong momentum
+4. Track positions continuously
+5. Sell on momentum reversal or target hit
+```
+
+### Implementation
+
+```javascript
+const MOMENTUM_THRESHOLD = 0.10;  // 10% volume increase
+const PROFIT_TARGET = 0.20;       // 20% gain
+const STOP_LOSS = 0.10;          // 10% loss
+
+async function momentumTrader() {
+  const positions = new Map();
+
+  while (true) {
+    // Get all tokens (free)
+    const tokens = await axios.get(`${BASE_URL}/tokens?sort=volume`);
+
+    for (const token of tokens.data) {
+      // Get detailed info (paid: $0.0001)
+      const info = await invokeEntrypoint('token_info', {
+        identifier: token.address
+      });
+
+      // Calculate momentum (volume change)
+      const momentum = info.volume24h / info.volumePrev24h - 1;
+
+      // Entry logic
+      if (momentum > MOMENTUM_THRESHOLD && !positions.has(token.address)) {
+        console.log(`Strong momentum: ${token.symbol} (+${(momentum * 100).toFixed(2)}%)`);
+
+        // Enter position
+        await invokeEntrypoint('token_buy_0_10', {
+          identifier: token.address,
+          amount: 0.10
+        });
+
+        positions.set(token.address, {
+          entry: info.price,
+          symbol: token.symbol,
+          timestamp: Date.now()
+        });
+      }
+
+      // Exit logic for existing positions
+      if (positions.has(token.address)) {
+        const pos = positions.get(token.address);
+        const pnl = (info.price - pos.entry) / pos.entry;
+
+        console.log(`${pos.symbol} P&L: ${(pnl * 100).toFixed(2)}%`);
+
+        // Take profit or stop loss
+        if (pnl > PROFIT_TARGET || pnl < -STOP_LOSS) {
+          console.log(`Exiting ${pos.symbol}: ${pnl > 0 ? 'PROFIT' : 'LOSS'}`);
+
+          await invokeEntrypoint('token_sell', {
+            identifier: token.address,
+            amount: 'all'
+          });
+
+          positions.delete(token.address);
+        }
+      }
+    }
+
+    await sleep(60000);  // Check every minute
+  }
+}
+
+momentumTrader();
+```
+
+### Cost Analysis
+
+```
+Per monitoring cycle (10 tokens):
+- Token info: 10 × $0.0001 = $0.001
+
+Per trade:
+- Entry: $0.10 + 1% = $0.101
+- Exit: $0.01 + 1% = $0.011
+
+Cost per round trip: ~$0.113
+Target profit: 20% on $0.10 = $0.020
+Win rate needed: ~16% to break even
+```
+
+---
+
+## Multi-Entrypoint Patterns
+
+### Pattern 1: Information → Decision → Execution
+
+```javascript
+// 1. Gather information
+const info = await invokeEntrypoint('token_info', { identifier: TOKEN });
+const positions = await axios.get('/positions');
+
+// 2. Make decision
+const shouldBuy = analyzeOpportunity(info, positions);
+
+// 3. Execute
+if (shouldBuy) {
+  await invokeEntrypoint('token_buy_0_10', { identifier: TOKEN, amount: 0.10 });
+}
+```
+
+### Pattern 2: Monitor → React → Update
+
+```javascript
+while (true) {
+  // Monitor
+  const tokens = await axios.get('/tokens');
+
+  // React to changes
+  for (const token of tokens) {
+    if (meetsCondition(token)) {
+      await executeStrategy(token);
+    }
+  }
+
+  // Update state
+  await updatePositions();
+  await sleep(60000);
+}
+```
+
+### Pattern 3: Compose → Execute → Verify
+
+```javascript
+// Compose multi-step workflow
+const workflow = [
+  { entrypoint: 'token_info', params: { identifier: TOKEN }},
+  { entrypoint: 'token_buy_0_10', params: { identifier: TOKEN, amount: 0.10 }},
+  { entrypoint: 'positions', params: {}}
+];
+
+// Execute each step
+for (const step of workflow) {
+  const result = await invokeEntrypoint(step.entrypoint, step.params);
+  console.log(result);
+}
+
+// Verify final state
+const final = await axios.get('/positions');
+assert(final.includes(TOKEN));
+```
+
+---
+
+## Best Practices
+
+### 1. Error Handling
+
+```javascript
+async function robustInvoke(entrypoint, params, retries = 3) {
+  for (let i = 0; i < retries; i++) {
+    try {
+      return await invokeEntrypoint(entrypoint, params);
+    } catch (error) {
+      console.error(`Attempt ${i + 1} failed:`, error.message);
+      if (i === retries - 1) throw error;
+      await sleep(1000 * (i + 1));  // Exponential backoff
+    }
+  }
+}
+```
+
+### 2. Cost Tracking
+
+```javascript
+let totalCost = 0;
+
+async function trackedInvoke(entrypoint, params) {
+  const result = await invokeEntrypoint(entrypoint, params);
+
+  // Track costs
+  const costs = {
+    'token_info': 0.0001,
+    'token_buy_0_10': 0.10,
+    'token_sell': 0.01
+  };
+
+  totalCost += costs[entrypoint] || 0;
+  console.log(`Total spent: $${totalCost.toFixed(4)}`);
+
+  return result;
+}
+```
+
+### 3. Rate Limiting
+
+```javascript
+const rateLimit = require('p-ratelimit');
+
+const limiter = rateLimit({
+  interval: 1000,  // 1 second
+  rate: 10         // 10 requests
+});
+
+async function limitedInvoke(entrypoint, params) {
+  return limiter(() => invokeEntrypoint(entrypoint, params));
+}
+```
+
+### 4. State Management
+
+```javascript
+class TradingAgent {
+  constructor() {
+    this.positions = new Map();
+    this.totalSpent = 0;
+    this.totalEarned = 0;
+  }
+
+  async trade(token, amount) {
+    const result = await invokeEntrypoint('token_buy_0_10', {
+      identifier: token,
+      amount
+    });
+
+    this.positions.set(token, {
+      amount,
+      entry: result.price,
+      timestamp: Date.now()
+    });
+
+    this.totalSpent += amount;
+  }
+
+  async exit(token) {
+    const result = await invokeEntrypoint('token_sell', {
+      identifier: token,
+      amount: 'all'
+    });
+
+    this.totalEarned += result.proceeds;
+    this.positions.delete(token);
+  }
+
+  getPnL() {
+    return this.totalEarned - this.totalSpent;
+  }
+}
+```
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card
+    title="Composability Patterns"
+    icon="diagram-project"
+    href="/api-reference/examples/composability"
+  >
+    Learn entrypoint composition patterns
+  </Card>
+  <Card
+    title="Entrypoints Reference"
+    icon="plug"
+    href="/concepts/entrypoints"
+  >
+    Complete entrypoint catalog
+  </Card>
+  <Card
+    title="CLI Commands"
+    icon="terminal"
+    href="/cli/commands"
+  >
+    Use httpcat for rapid prototyping
+  </Card>
+  <Card
+    title="API Reference"
+    icon="book"
+    href="/api-reference/overview"
+  >
+    Complete API documentation
+  </Card>
+</CardGroup>
+
+<Tip>
+Start simple. Test one entrypoint at a time. Add complexity through composition, not through individual operations. The most sophisticated agents are just simple primitives composed well.
+</Tip>

@@ -1,0 +1,237 @@
+---
+title: "Agent Infrastructure"
+description: "Economic capabilities for AI agents"
+---
+
+## What is Agent Infrastructure?
+
+Agent infrastructure provides **economic capabilities for AI agents**—the tools they need to act financially, not just analyze and recommend.
+
+Today's AI agents can:
+- Analyze trading opportunities
+- Recommend portfolio changes
+- Explain market conditions
+- Generate trading strategies
+
+But they can't:
+- Execute trades
+- Hold positions
+- Pay for services
+- Earn revenue
+
+**Agent infrastructure fills this gap.** It gives agents wallets, payment capabilities, and access to financial tools through simple API calls.
+
+## The Intelligence-to-Action Gap
+
+The bottleneck for AI agents isn't intelligence anymore—it's **execution**.
+
+Claude can scaffold a trading strategy in a single conversation. Cursor can ship a product in an afternoon. The intelligence exists. What's missing is the ability to **act with economic consequence**.
+
+**Examples of the gap:**
+- An agent identifies an arbitrage opportunity → Can't capture it (no wallet, no execution)
+- An agent analyzes a promising token → Can't buy it (no DeFi access)
+- An agent generates alpha signals → Can't monetize them (no payment rails)
+- An agent needs market data → Can't pay for it (no micropayments)
+
+Agent infrastructure bridges intelligence to action. Agents go from **observers to participants**.
+
+## Why Agents Need Economic Capabilities
+
+### 1. Real Stakes Enable Real Learning
+
+Models trained on text understand money conceptually. They read about trading, risk management, and financial strategy. But reading about money is different from having money.
+
+**Constraints create alignment.** An agent with no budget is an agent with no accountability. An agent that must pay for each action—and can run out of funds—is an agent that learns to prioritize.
+
+When agents operate with real economic consequence:
+- Wrong decisions cost money (feedback is immediate)
+- Good decisions earn money (incentives align)
+- Budget constraints force prioritization (no infinite compute)
+
+### 2. Agents Can Compose Services
+
+With payment capabilities, agents can access services on-demand:
+- Market data when they need it
+- Execution when opportunities arise
+- Intelligence from other agents
+- Tools for specific tasks
+
+**Pay-per-call beats subscriptions.** Agents pay for exactly what they use, when they use it. No monthly fees for services they access once.
+
+### 3. Agents Can Become Services
+
+Economic infrastructure works both ways:
+- Agents consume services (pay for data, execution, tools)
+- Agents provide services (earn from their capabilities)
+
+An agent with valuable signals can sell access. An agent with execution capabilities can charge fees. An agent with unique data can monetize it.
+
+**The network effect:** More agents → more services → more value → more agents.
+
+## The 402.cat Stack
+
+402.cat provides the infrastructure in layers:
+
+### Layer 1: x402 Payment Rails
+
+**Universal micropayments** based on HTTP 402 (Payment Required).
+
+**Key features:**
+- Gasless payments (no user gas fees)
+- Instant settlement (no waiting for blocks)
+- Trustless (cryptographic signatures)
+- Works for any HTTP service
+
+**Why it matters:** Agents can pay for services automatically. No API keys. No accounts. Just wallets and signatures.
+
+See [x402 Protocol](/concepts/x402-protocol) for technical details.
+
+### Layer 2: Entrypoints
+
+**Composable building blocks** for agent operations.
+
+**Current entrypoints:**
+- Token operations (create, buy, sell)
+- Universal swap (any ERC20 token)
+- Market data (listings, positions, prices)
+- Chat system (token-specific and general)
+
+**Why it matters:** Each entrypoint is a primitive. Agents compose primitives into sophisticated workflows. The more entrypoints available, the more agents can do.
+
+See [Entrypoints](/concepts/entrypoints) for the full catalog.
+
+### Layer 3: Agent Tools
+
+**Developer-friendly interfaces** for building and deploying agents.
+
+**Available tools:**
+- **httpcat-cli**: Command-line interface with 18+ commands
+- **MCP Server**: Expose operations to AI assistants (Claude, Cursor, etc.)
+- **API**: Direct HTTP access for maximum flexibility
+
+**Why it matters:** Agents need ways to interact with the infrastructure. CLI for humans, MCP for AI assistants, API for custom integrations.
+
+### What's Coming
+
+More layers in development:
+- Market intelligence (opportunities, risk, analytics)
+- Advanced DeFi access (perps, predictions, lending)
+- Agent-to-agent services (strategies, signals, tools)
+
+Each layer compounds on the previous. Payment rails enable entrypoints. Entrypoints enable workflows. Workflows enable new services.
+
+## Why Start with Token Launchpad?
+
+If the vision is "infrastructure for agent commerce," why start with a token launchpad?
+
+### 1. Where the Energy Is
+
+Memecoins are where attention lives. Tokens generate activity. Activity generates fees. Fees fund infrastructure development.
+
+**Strategic:** Build where users are, not where you wish they were.
+
+### 2. Proves the Infrastructure Works
+
+The launchpad demonstrates that:
+- x402 payments work at scale
+- Agents can execute complex operations
+- Users value pay-per-call access
+- Referral economics create growth
+
+**Tactical:** Proof of concept for broader infrastructure.
+
+### 3. Revenue Funds Expansion
+
+Every token created. Every trade executed. Every entrypoint called. All generate fees.
+
+**Economic:** Use revenue from current use cases to build future ones.
+
+### 4. Foundation for More
+
+The same infrastructure that powers token trading can power:
+- Universal swaps (already live)
+- Market data feeds (expanding)
+- Perps and predictions (coming)
+- Custom agent services (coming)
+
+**Architectural:** Build once, extend infinitely.
+
+## The Bigger Picture
+
+402.cat isn't just a token launchpad. It's the **first use case** for agent economic infrastructure.
+
+The launchpad gets attention. The infrastructure keeps it. As more entrypoints launch, agents discover they can do more than trade tokens—they can access the full spectrum of DeFi through the same pay-per-call rails.
+
+**The shift:**
+- From launchpad to platform
+- From features to primitives
+- From app to infrastructure
+
+Users come for tokens. They stay for the infrastructure.
+
+## What This Enables
+
+With agent infrastructure, new patterns emerge:
+
+**AI Trading Agents**
+- Monitor markets via data entrypoints
+- Execute trades via buy/sell entrypoints
+- Manage risk via position tracking
+- All automatic, all pay-per-call
+
+**Portfolio Agents**
+- Analyze holdings
+- Rebalance via swap entrypoint
+- Track performance
+- Optimize allocation
+
+**Strategy Agents**
+- Discover opportunities
+- Execute multi-step workflows
+- Compose entrypoints into strategies
+- Monetize successful patterns
+
+**Builder Agents**
+- Create new entrypoints
+- Earn from usage
+- Compose other entrypoints
+- Contribute to ecosystem
+
+The infrastructure makes all of this possible. Not through complex integration. Through simple HTTP calls and micropayments.
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card
+    title="Entrypoints"
+    icon="plug"
+    href="/concepts/entrypoints"
+  >
+    Explore composable building blocks
+  </Card>
+  <Card
+    title="x402 Protocol"
+    icon="bolt"
+    href="/concepts/x402-protocol"
+  >
+    Understand the payment rails
+  </Card>
+  <Card
+    title="Agent Commerce"
+    icon="network-wired"
+    href="/concepts/agent-commerce"
+  >
+    See the economic model
+  </Card>
+  <Card
+    title="Quick Start"
+    icon="rocket"
+    href="/quickstart"
+  >
+    Start building with httpcat-cli
+  </Card>
+</CardGroup>
+
+<Tip>
+Agent infrastructure is about removing bottlenecks. Intelligence already exists. Economic capability is what's missing. 402.cat provides it.
+</Tip>

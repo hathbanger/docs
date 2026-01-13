@@ -1,0 +1,738 @@
+---
+title: "Composability Patterns"
+description: "How agents chain entrypoints into sophisticated workflows"
+---
+
+## What is Entrypoint Composability?
+
+Each entrypoint is a **primitive operation**—simple, focused, does one thing well. Powerful agents don't come from complex entrypoints. They come from **composing simple entrypoints** into workflows.
+
+**The pattern:**
+- Individual entrypoints are atomic (create, buy, sell, swap, info)
+- Agents chain entrypoints together (buy → monitor → sell)
+- Sophisticated behavior emerges from composition, not complexity
+
+**Key insight:** 5 entrypoints can create dozens of workflows. 50 entrypoints can create thousands. Composability scales exponentially.
+
+---
+
+## Pattern 1: Sequential Composition
+
+Execute entrypoints in order, where each step depends on the previous.
+
+### Example: Complete Token Launch
+
+```javascript
+async function launchToken(name, symbol) {
+  // Step 1: Create token ($0.01)
+  const token = await invokeEntrypoint('token_create', {
+    name,
+    symbol,
+    website: `https://${symbol.toLowerCase()}.com`
+  });
+
+  console.log(`Created ${symbol} at ${token.address}`);
+
+  // Step 2: Initial buy to show confidence ($0.10)
+  await invokeEntrypoint('token_buy_0_10', {
+    identifier: token.address,
+    amount: 0.10
+  });
+
+  console.log('Initial buy complete');
+
+  return token;
+}
+```
+
+**Two entrypoints. One complete workflow.**
+
+**Cost:** $0.01 + $0.10 = $0.11
+
+---
+
+## Pattern 2: Conditional Composition
+
+Execute entrypoints based on conditions from previous results.
+
+### Example: Smart Buy with Analysis
+
+```javascript
+async function smartBuy(tokenAddress, maxAmount) {
+  // Step 1: Get token info ($0.0001)
+  const info = await invokeEntrypoint('token_info', {
+    identifier: tokenAddress
+  });
+
+  // Step 2: Analyze (local logic, no cost)
+  const score = analyzeToken(info);
+
+  // Step 3: Conditional buy based on score
+  if (score > 80) {
+    console.log('High quality token - buying maximum');
+    await invokeEntrypoint('token_buy_0_10', {
+      identifier: tokenAddress,
+      amount: maxAmount
+    });
+  } else if (score > 50) {
+    console.log('Medium quality token - buying half');
+    await invokeEntrypoint('token_buy_0_10', {
+      identifier: tokenAddress,
+      amount: maxAmount / 2
+    });
+  } else {
+    console.log('Low quality token - skipping');
+    return null;
+  }
+
+  // Step 4: Verify position (free)
+  const positions = await axios.get(`${BASE_URL}/positions`);
+  return positions.data.find(p => p.token === tokenAddress);
+}
+
+function analyzeToken(info) {
+  let score = 0;
+
+  if (info.liquidity > 1000) score += 30;
+  if (info.holders > 50) score += 20;
+  if (info.volume24h > 100) score += 25;
+  if (info.age < 3600) score += 15;  // Less than 1 hour old
+  if (info.priceChange24h > 0) score += 10;
+
+  return score;
+}
+```
+
+**Pattern:** Information → Analysis → Conditional Execution → Verification
+
+---
+
+## Pattern 3: Parallel Composition
+
+Execute multiple entrypoints concurrently for efficiency.
+
+### Example: Portfolio Snapshot
+
+```javascript
+async function getPortfolioSnapshot(tokenAddresses) {
+  // Execute all token_info calls in parallel
+  const infoPromises = tokenAddresses.map(address =>
+    invokeEntrypoint('token_info', { identifier: address })
+  );
+
+  // Get positions in parallel
+  const positionsPromise = axios.get(`${BASE_URL}/positions`);
+
+  // Wait for all to complete
+  const [infos, positions] = await Promise.all([
+    Promise.all(infoPromises),
+    positionsPromise
+  ]);
+
+  // Combine data
+  return tokenAddresses.map((address, i) => ({
+    address,
+    info: infos[i],
+    position: positions.data.find(p => p.token === address)
+  }));
+}
+
+// Usage
+const tokens = ['0xToken1', '0xToken2', '0xToken3'];
+const snapshot = await getPortfolioSnapshot(tokens);
+
+// Cost: 3 × $0.0001 = $0.0003 (all in parallel, fast)
+```
+
+**Benefit:** 3x faster than sequential execution.
+
+---
+
+## Pattern 4: Loop Composition
+
+Repeat entrypoint calls based on conditions.
+
+### Example: DCA (Dollar Cost Averaging)
+
+```javascript
+async function dollarCostAverage(token, totalAmount, numBuys, intervalMs) {
+  const amountPerBuy = totalAmount / numBuys;
+
+  for (let i = 0; i < numBuys; i++) {
+    console.log(`Buy ${i + 1}/${numBuys}`);
+
+    // Execute buy
+    await invokeEntrypoint('token_buy_0_10', {
+      identifier: token,
+      amount: amountPerBuy
+    });
+
+    // Check position
+    const positions = await axios.get(`${BASE_URL}/positions`);
+    const pos = positions.data.find(p => p.token === token);
+
+    console.log(`Total position: ${pos.balance} tokens`);
+
+    // Wait before next buy (if not last)
+    if (i < numBuys - 1) {
+      await sleep(intervalMs);
+    }
+  }
+
+  console.log('DCA complete');
+}
+
+// Buy $0.50 worth over 5 buys, 1 hour apart
+await dollarCostAverage('0xToken', 0.50, 5, 60 * 60 * 1000);
+```
+
+**Pattern:** Repeat → Execute → Verify → Delay
+
+---
+
+## Pattern 5: Monitor-React Composition
+
+Continuously monitor state, react to changes.
+
+### Example: Trailing Stop Loss
+
+```javascript
+async function trailingStopLoss(token, stopLossPercent) {
+  // Get initial position
+  const positions = await axios.get(`${BASE_URL}/positions`);
+  const pos = positions.data.find(p => p.token === token);
+
+  if (!pos) {
+    throw new Error('No position found');
+  }
+
+  let highestPrice = pos.currentPrice;
+  const entryPrice = pos.avgPrice;
+
+  console.log(`Monitoring ${pos.symbol} with ${stopLossPercent}% trailing stop`);
+
+  while (true) {
+    // Check current price ($0.0001)
+    const info = await invokeEntrypoint('token_info', {
+      identifier: token
+    });
+
+    const currentPrice = info.price;
+
+    // Update highest price seen
+    if (currentPrice > highestPrice) {
+      highestPrice = currentPrice;
+      console.log(`New high: $${highestPrice.toFixed(6)}`);
+    }
+
+    // Calculate stop loss trigger
+    const stopPrice = highestPrice * (1 - stopLossPercent / 100);
+
+    // Check if stop loss hit
+    if (currentPrice <= stopPrice) {
+      console.log(`Stop loss triggered at $${currentPrice.toFixed(6)}`);
+
+      // Sell everything ($0.01)
+      await invokeEntrypoint('token_sell', {
+        identifier: token,
+        amount: 'all'
+      });
+
+      const pnl = (currentPrice - entryPrice) / entryPrice;
+      console.log(`Exited with ${(pnl * 100).toFixed(2)}% P&L`);
+
+      break;
+    }
+
+    // Wait before next check
+    await sleep(10000);  // Check every 10 seconds
+  }
+}
+
+// Sell if price drops 10% from highest point
+await trailingStopLoss('0xToken', 10);
+```
+
+**Pattern:** Monitor → Update State → Check Condition → React
+
+---
+
+## Pattern 6: Cross-Entrypoint Arbitrage
+
+Use different entrypoint types together.
+
+### Example: Bonding Curve → Uniswap Arbitrage
+
+```javascript
+async function bondingCurveArbitrage(token, minSpread) {
+  // Get bonding curve price ($0.0001)
+  const bondingInfo = await invokeEntrypoint('token_info', {
+    identifier: token
+  });
+
+  // Get Uniswap price (free quote)
+  const uniswapQuote = await axios.post(
+    `${BASE_URL}/entrypoints/universal_swap/quote`,
+    {
+      tokenIn: token,
+      tokenOut: 'USDC',
+      amountIn: '1000000'  // 1M tokens
+    }
+  );
+
+  const bondingPrice = bondingInfo.sellPrice;
+  const uniswapPrice = uniswapQuote.data.price;
+
+  const spread = (uniswapPrice - bondingPrice) / bondingPrice;
+
+  console.log(`Bonding: $${bondingPrice}, Uniswap: $${uniswapPrice}`);
+  console.log(`Spread: ${(spread * 100).toFixed(2)}%`);
+
+  if (spread > minSpread) {
+    console.log('Arbitrage opportunity found!');
+
+    // Buy on bonding curve (cheaper)
+    await invokeEntrypoint('token_buy_0_10', {
+      identifier: token,
+      amount: 0.10
+    });
+
+    // Sell on Uniswap (expensive)
+    await invokeEntrypoint('universal_swap', {
+      tokenIn: token,
+      tokenOut: 'USDC',
+      amountIn: 'all',
+      slippage: 0.5
+    });
+
+    console.log('Arbitrage executed');
+    return true;
+  }
+
+  return false;
+}
+
+// Look for 1%+ arbitrage opportunities
+await bondingCurveArbitrage('0xToken', 0.01);
+```
+
+**Two entrypoint types. One arbitrage strategy.**
+
+---
+
+## Pattern 7: Multi-Stage Workflow
+
+Complex workflows with multiple decision points.
+
+### Example: Advanced Trading Strategy
+
+```javascript
+async function advancedTradingStrategy(maxInvestment) {
+  // Stage 1: Discovery
+  console.log('Stage 1: Discovering opportunities');
+
+  const tokens = await axios.get(`${BASE_URL}/tokens?sort=volume&limit=20`);
+
+  // Stage 2: Analysis (parallel)
+  console.log('Stage 2: Analyzing tokens');
+
+  const analyses = await Promise.all(
+    tokens.data.map(async token => {
+      const info = await invokeEntrypoint('token_info', {
+        identifier: token.address
+      });
+
+      return {
+        token,
+        info,
+        score: analyzeToken(info)
+      };
+    })
+  );
+
+  // Stage 3: Ranking
+  console.log('Stage 3: Ranking opportunities');
+
+  const sorted = analyses
+    .filter(a => a.score > 60)
+    .sort((a, b) => b.score - a.score);
+
+  if (sorted.length === 0) {
+    console.log('No opportunities found');
+    return;
+  }
+
+  // Stage 4: Allocation
+  console.log('Stage 4: Allocating capital');
+
+  const topPicks = sorted.slice(0, 3);
+  const amountPerToken = maxInvestment / topPicks.length;
+
+  // Stage 5: Execution (sequential)
+  console.log('Stage 5: Executing trades');
+
+  for (const pick of topPicks) {
+    console.log(`Buying ${pick.token.symbol} (score: ${pick.score})`);
+
+    await invokeEntrypoint('token_buy_0_10', {
+      identifier: pick.token.address,
+      amount: amountPerToken
+    });
+  }
+
+  // Stage 6: Monitoring setup
+  console.log('Stage 6: Setting up monitoring');
+
+  monitorPositions(topPicks.map(p => p.token.address));
+}
+
+// Execute strategy with $0.30 budget
+await advancedTradingStrategy(0.30);
+```
+
+**Six stages. Multiple entrypoints. One complete strategy.**
+
+---
+
+## Pattern 8: Event-Driven Composition
+
+React to events by chaining entrypoints.
+
+### Example: New Token Alert & Auto-Buy
+
+```javascript
+async function autoTradeNewTokens(criteria) {
+  console.log('Monitoring for new tokens...');
+
+  let lastTokenCount = 0;
+
+  while (true) {
+    // Get current tokens (free)
+    const tokens = await axios.get(`${BASE_URL}/tokens`);
+
+    // Check for new tokens
+    if (tokens.data.length > lastTokenCount) {
+      const newTokens = tokens.data.slice(0, tokens.data.length - lastTokenCount);
+
+      for (const token of newTokens) {
+        console.log(`New token detected: ${token.symbol}`);
+
+        // Analyze new token ($0.0001)
+        const info = await invokeEntrypoint('token_info', {
+          identifier: token.address
+        });
+
+        // Check criteria
+        if (meetsCriteria(info, criteria)) {
+          console.log(`${token.symbol} meets criteria - buying`);
+
+          // Auto-buy ($0.10)
+          await invokeEntrypoint('token_buy_0_10', {
+            identifier: token.address,
+            amount: 0.10
+          });
+        }
+      }
+
+      lastTokenCount = tokens.data.length;
+    }
+
+    await sleep(60000);  // Check every minute
+  }
+}
+
+function meetsCriteria(info, criteria) {
+  return info.liquidity >= criteria.minLiquidity &&
+         info.holders >= criteria.minHolders;
+}
+
+// Auto-trade tokens with good fundamentals
+await autoTradeNewTokens({
+  minLiquidity: 1000,
+  minHolders: 10
+});
+```
+
+**Event:** New token → **React:** Analyze → **Act:** Buy
+
+---
+
+## Pattern 9: Recursive Composition
+
+Entrypoints that trigger more entrypoints based on results.
+
+### Example: Pyramid Buying Strategy
+
+```javascript
+async function pyramidBuy(token, initialAmount, iterations, multiplier) {
+  let currentAmount = initialAmount;
+  let totalSpent = 0;
+
+  for (let i = 0; i < iterations; i++) {
+    console.log(`Iteration ${i + 1}: Buying $${currentAmount.toFixed(2)}`);
+
+    // Get current price ($0.0001)
+    const info = await invokeEntrypoint('token_info', {
+      identifier: token
+    });
+
+    // Execute buy
+    await invokeEntrypoint('token_buy_0_10', {
+      identifier: token,
+      amount: currentAmount
+    });
+
+    totalSpent += currentAmount;
+
+    // Check if price increased
+    await sleep(60000);  // Wait 1 minute
+
+    const newInfo = await invokeEntrypoint('token_info', {
+      identifier: token
+    });
+
+    if (newInfo.price > info.price) {
+      console.log('Price increased - scaling up buy size');
+      currentAmount *= multiplier;  // Buy more on next iteration
+    } else {
+      console.log('Price decreased - keeping buy size constant');
+    }
+  }
+
+  console.log(`Pyramid complete. Total spent: $${totalSpent.toFixed(2)}`);
+}
+
+// Start with $0.05, buy 4 times, 1.5x multiplier on wins
+await pyramidBuy('0xToken', 0.05, 4, 1.5);
+```
+
+**Recursive:** Each iteration depends on previous results.
+
+---
+
+## Pattern 10: Portfolio-Wide Composition
+
+Operate on entire portfolio at once.
+
+### Example: Rebalance to Equal Weight
+
+```javascript
+async function rebalanceToEqualWeight() {
+  // Get all positions (free)
+  const positions = await axios.get(`${BASE_URL}/positions`);
+
+  if (positions.data.length === 0) {
+    console.log('No positions to rebalance');
+    return;
+  }
+
+  // Calculate total value
+  const totalValue = positions.data.reduce((sum, pos) => {
+    return sum + (pos.balance * pos.price);
+  }, 0);
+
+  // Target value per position
+  const targetValue = totalValue / positions.data.length;
+
+  console.log(`Total value: $${totalValue.toFixed(2)}`);
+  console.log(`Target per position: $${targetValue.toFixed(2)}`);
+
+  // Rebalance each position
+  for (const pos of positions.data) {
+    const currentValue = pos.balance * pos.price;
+    const diff = currentValue - targetValue;
+
+    if (Math.abs(diff) > 0.01) {  // Only rebalance if >$0.01 difference
+      if (diff > 0) {
+        // Overweight - sell excess
+        const sellAmount = diff / pos.price;
+        console.log(`Selling ${sellAmount.toFixed(2)} ${pos.symbol}`);
+
+        await invokeEntrypoint('token_sell', {
+          identifier: pos.token,
+          amount: sellAmount.toString()
+        });
+      } else {
+        // Underweight - buy more
+        const buyAmount = Math.abs(diff);
+        console.log(`Buying $${buyAmount.toFixed(2)} ${pos.symbol}`);
+
+        await invokeEntrypoint('token_buy_0_10', {
+          identifier: pos.token,
+          amount: buyAmount
+        });
+      }
+    }
+  }
+
+  console.log('Rebalancing complete');
+}
+
+await rebalanceToEqualWeight();
+```
+
+**Operates on:** Entire portfolio as a unit.
+
+---
+
+## Composition Complexity
+
+As entrypoints grow, composition possibilities explode:
+
+```
+2 entrypoints: 3 possible workflows (A, B, AB)
+3 entrypoints: 15 possible workflows
+5 entrypoints: 325 possible workflows
+10 entrypoints: 9,864,100 possible workflows
+
+Current (15 entrypoints): billions of possible workflows
+Future (50 entrypoints): astronomical possibilities
+```
+
+**This is infrastructure thinking:** Build primitives, let composition create complexity.
+
+---
+
+## Best Practices for Composition
+
+### 1. Keep Individual Steps Simple
+
+```javascript
+// Good: Simple, focused functions
+async function getTokenInfo(address) {
+  return await invokeEntrypoint('token_info', { identifier: address });
+}
+
+async function buyToken(address, amount) {
+  return await invokeEntrypoint('token_buy_0_10', { identifier: address, amount });
+}
+
+// Compose them
+const info = await getTokenInfo(token);
+if (info.score > 80) {
+  await buyToken(token, 0.10);
+}
+```
+
+### 2. Handle Errors at Each Step
+
+```javascript
+async function safeComposition(token) {
+  try {
+    const info = await getTokenInfo(token);
+    const buy = await buyToken(token, 0.10);
+    return { success: true, data: buy };
+  } catch (error) {
+    console.error(`Failed at step: ${error.message}`);
+    return { success: false, error };
+  }
+}
+```
+
+### 3. Make Workflows Resumable
+
+```javascript
+class ResumableWorkflow {
+  constructor(token) {
+    this.token = token;
+    this.state = {
+      step: 0,
+      data: {}
+    };
+  }
+
+  async run() {
+    while (this.state.step < this.steps.length) {
+      const step = this.steps[this.state.step];
+      this.state.data = await step(this.state.data);
+      this.state.step++;
+      this.save();  // Persist state
+    }
+  }
+
+  steps = [
+    async (data) => {
+      const info = await getTokenInfo(this.token);
+      return { ...data, info };
+    },
+    async (data) => {
+      const buy = await buyToken(this.token, 0.10);
+      return { ...data, buy };
+    }
+  ];
+}
+```
+
+### 4. Optimize for Cost
+
+```javascript
+// Expensive: Sequential calls
+for (const token of tokens) {
+  await invokeEntrypoint('token_info', { identifier: token });
+}
+
+// Cheaper: Parallel calls
+await Promise.all(
+  tokens.map(token =>
+    invokeEntrypoint('token_info', { identifier: token })
+  )
+);
+```
+
+### 5. Log Composition Steps
+
+```javascript
+async function loggedWorkflow(token) {
+  console.log('Step 1: Getting info');
+  const info = await getTokenInfo(token);
+
+  console.log('Step 2: Analyzing');
+  const score = analyze(info);
+
+  console.log('Step 3: Executing buy');
+  if (score > 80) {
+    await buyToken(token, 0.10);
+  }
+
+  console.log('Workflow complete');
+}
+```
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card
+    title="Agent Trading Examples"
+    icon="robot"
+    href="/api-reference/examples/agent-trading"
+  >
+    Complete trading agent implementations
+  </Card>
+  <Card
+    title="Entrypoints Reference"
+    icon="plug"
+    href="/concepts/entrypoints"
+  >
+    All available entrypoints
+  </Card>
+  <Card
+    title="CLI Reference"
+    icon="terminal"
+    href="/cli/commands"
+  >
+    Rapid prototyping with httpcat
+  </Card>
+  <Card
+    title="API Documentation"
+    icon="book"
+    href="/api-reference/overview"
+  >
+    Complete API reference
+  </Card>
+</CardGroup>
+
+<Tip>
+The best compositions are simple steps that combine well. Don't try to build complexity into individual entrypoints. Build simple primitives and let composition create sophistication. This is how infrastructure scales.
+</Tip>

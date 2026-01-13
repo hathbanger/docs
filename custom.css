@@ -62,6 +62,19 @@ pre, code, .code-block {
   font-size: 13px !important;
 }
 
+/* Terminal snippets - Add padding inside the black code block */
+pre {
+  overflow-x: auto !important;
+}
+
+/* Add padding to code inside pre (Shiki syntax highlighting) */
+pre > code,
+pre.shiki > code,
+html.dark pre.shiki > code {
+  padding: 16px 20px !important;
+  display: block !important;
+}
+
 /* Inline Code - Subtle Pop */
 :not(pre) > code {
   background-color: var(--cat-inline-code-bg) !important;
@@ -103,6 +116,35 @@ div, section, article {
   font-weight: 700 !important;
   letter-spacing: -0.05em !important;
   color: var(--cat-accent) !important;
+}
+
+/* Move logo triangles up 5px to position as ears */
+/* Target SVG paths in logo (if SVG logo files are used) */
+nav svg path,
+header svg path,
+[class*="logo"] svg path,
+[class*="Logo"] svg path,
+svg[viewBox="0 0 80 80"] path {
+  transform: translateY(-5px) !important;
+}
+
+/* For text-based triangles (Unicode ▲ characters in name field) */
+/* Target the logo text container */
+nav a[href="/"],
+header a[href="/"],
+[class*="logo"],
+[class*="Logo"] {
+  position: relative;
+  display: inline-block;
+}
+
+/* Move the first triangle character up */
+nav a[href="/"]::first-letter,
+header a[href="/"]::first-letter {
+  position: relative;
+  top: -5px;
+  display: inline-block;
+  vertical-align: baseline;
 }
 
 /* Selection */
